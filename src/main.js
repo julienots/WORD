@@ -8,6 +8,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { App } from '@capacitor/app';
 import { putDoc, getDoc, listDocs, deleteDoc } from './store.js';
+import { initRibbon, resetRibbonState } from './ribbon.js';
 
 const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const isNative = Capacitor.isNativePlatform();
@@ -104,6 +105,7 @@ function destroyEditor() {
 
 function openDocument(source, name = 'Document1', id = null) {
   destroyEditor();
+  resetRibbonState();
   show('editor-screen');
   loader(true);
   state.docId = id || newId();
@@ -123,11 +125,16 @@ function openDocument(source, name = 'Document1', id = null) {
     user: { name: 'Utilisateur .WORKS', email: 'user@works.local' },
     modules: {
       toolbar: { responsiveToContainer: true },
-      comments: false,
+      comments: window.innerWidth >= 900 ? { readOnly: false } : false,
     },
     onReady: () => {
       state.ready = true;
       loader(false);
+      try {
+        state.superdoc.setMeasurementUnit?.('cm');
+      } catch (e) {
+        console.warn(e);
+      }
       fitWidth();
     },
     onEditorUpdate: () => markDirty(),
@@ -149,6 +156,7 @@ function openDocument(source, name = 'Document1', id = null) {
 
   try {
     state.superdoc = new SuperDoc(config);
+    window.__sd = state.superdoc;
   } catch (e) {
     console.error(e);
     loader(false);
@@ -367,5 +375,6 @@ if (isNative) {
   App.addListener('resume', takeNativeFile);
 }
 
+initRibbon({ getSuperdoc: () => state.superdoc, toast });
 renderRecents();
 takeNativeFile();

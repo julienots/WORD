@@ -106,11 +106,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .doc-name:focus { outline: none; border-color: var(--yellow); background: #1a1a1a; }
 .save-state { font-size: 11px; color: #999; white-space: nowrap; }
 
-.toolbar-host {
-  flex: none; background: #fff; border-bottom: 1px solid #d0d0d0;
-  overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
-}
-.toolbar-host::-webkit-scrollbar { height: 0; }
 .ruler-host { flex: none; background: #f3f3f3; overflow: hidden; }
 .ruler-host:empty { display: none; }
 .doc-scroll { flex: 1; min-height: 0; overflow: auto; background: var(--word-gray); -webkit-overflow-scrolling: touch; }
@@ -157,7 +152,89 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .spin { width: 44px; height: 44px; border: 4px solid #333; border-top-color: var(--yellow); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Give the Word ribbon its full desktop width and let it scroll horizontally on phones,
-   so every command (fonts, sizes, colors, lists, tables, images, links…) stays reachable. */
-#toolbar { width: 1180px; min-width: 100%; }
-@media (min-width: 1180px) { #toolbar { width: 100%; } }
+
+/* ---------- Ribbon (Word style) ---------- */
+.ribbon { flex: none; background: #fff; border-bottom: 1px solid #d0d0d0; }
+.rb-tabs {
+  display: flex; gap: 2px; overflow-x: auto; background: #0b0b0b; padding: 0 6px;
+  scrollbar-width: none;
+}
+.rb-tabs::-webkit-scrollbar, .rb-panel::-webkit-scrollbar { display: none; }
+.rb-tab {
+  flex: none; border: 0; background: transparent; color: #bbb; font-size: 13px; font-weight: 600;
+  padding: 8px 12px 7px; border-bottom: 3px solid transparent;
+}
+.rb-tab.active { color: #fff; border-bottom-color: var(--yellow); }
+.rb-panel {
+  display: flex; align-items: stretch; overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; background: #fff;
+}
+.rb-builtin { display: none; flex: none; align-self: center; border-right: 1px solid #e3e3e3; }
+.rb-builtin.show-builtin { display: block; }
+#toolbar { width: 1180px; }
+.rb-extra { display: flex; flex: none; }
+.rb-pane { display: flex; align-items: stretch; }
+.rb-group { display: flex; flex-direction: column; border-right: 1px solid #e3e3e3; padding: 3px 4px 2px; flex: none; }
+.rb-items { display: flex; align-items: stretch; gap: 1px; flex: 1; }
+.rb-glabel { text-align: center; font-size: 10px; color: #777; padding-top: 1px; white-space: nowrap; }
+.rb-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
+  min-width: 52px; max-width: 78px; padding: 4px 4px 2px; border: 0; border-radius: 6px; background: transparent; color: #222;
+}
+.rb-btn:hover, .rb-btn:active { background: #eee; }
+.rb-btn.on { background: #ffe9a3; box-shadow: inset 0 0 0 1px var(--yellow-dark); }
+.rb-btn svg { width: 24px; height: 24px; flex: none; }
+.rb-btn .glyph { height: 24px; display: flex; align-items: center; font-size: 17px; font-weight: 600; line-height: 1; white-space: nowrap; }
+.rb-btn .glyph sup, .rb-btn .glyph sub { font-size: 9px; }
+.rb-label { font-size: 10.5px; line-height: 1.15; text-align: center; white-space: normal; }
+
+.rb-menu {
+  position: fixed; z-index: 3000; background: #fff; color: #222; border: 1px solid #d5d5d5; border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18); padding: 6px; min-width: 200px; max-width: min(92vw, 360px);
+  max-height: 70vh; overflow-y: auto;
+}
+.rb-menu > button {
+  display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 9px 12px; border-radius: 6px; font-size: 14px;
+}
+.rb-menu > button:hover { background: #f1f1f1; }
+.rb-menu-head { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px 4px; }
+.rb-sep-h { height: 1px; background: #e6e6e6; margin: 4px 6px; }
+.swatches { display: grid; grid-template-columns: repeat(10, 22px); gap: 4px; padding: 2px; }
+.swatches span { width: 22px; height: 22px; border-radius: 3px; border: 1px solid #ccc; display: block; }
+.color-menu > button:nth-child(2):hover, .sym-menu > button:first-child:hover { background: transparent; }
+.sym-grid { display: grid; grid-template-columns: repeat(10, 28px); gap: 3px; }
+.sym-grid span { width: 28px; height: 30px; display: grid; place-items: center; border: 1px solid #e3e3e3; border-radius: 4px; font-size: 16px; }
+.sym-grid span:hover { background: #fff3c4; }
+.styles-menu > button { padding: 10px 14px; }
+
+/* ---------- Dialogs ---------- */
+.dlg-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.dlg {
+  background: #fff; color: #222; border-radius: 16px; width: min(440px, 100%); max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden;
+}
+.dlg h3 { margin: 0; padding: 16px 18px 10px; font-size: 17px; border-bottom: 3px solid var(--yellow); }
+.dlg-body { padding: 10px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.dlg-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+.dlg-row > span { flex: 1; }
+.dlg-row input:not([type=checkbox]):not([type=color]), .dlg-row select, .dlg-row textarea {
+  flex: 1.2; min-width: 0; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; font: inherit; background: #fafafa;
+}
+.dlg-textarea { flex-direction: column; align-items: stretch; }
+.dlg-textarea textarea { width: 100%; }
+.dlg-checkbox { justify-content: flex-start; }
+.dlg-checkbox input { width: 20px; height: 20px; accent-color: #222; }
+.dlg-row input[type=color] { width: 56px; height: 34px; border: 1px solid #ccc; border-radius: 8px; padding: 2px; background: #fff; }
+.dlg-info { font-size: 14px; width: 100%; }
+.dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid #eee; }
+.dlg-actions button { border: 1px solid #ccc; background: #fff; border-radius: 10px; padding: 9px 16px; font-weight: 600; }
+.dlg-actions button.primary { background: #0b0b0b; color: var(--yellow); border-color: #0b0b0b; }
+.dlg-actions button.dlg-extra { margin-right: auto; }
+.dlg-actions button.dlg-extra + button.dlg-extra { margin-right: 0; }
+table.stats { width: 100%; border-collapse: collapse; }
+table.stats td { padding: 7px 4px; border-bottom: 1px solid #eee; }
+table.stats td:last-child { text-align: right; font-weight: 700; }
+
+body.reading .ribbon .rb-panel { display: none; }
+.cm-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+.cm-quote { color: #777; font-style: italic; margin: 2px 0; }

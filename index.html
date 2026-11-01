@@ -56,7 +56,13 @@
           <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
         </button>
       </header>
-      <div class="toolbar-host"><div id="toolbar"></div></div>
+      <div class="ribbon">
+        <nav id="rb-tabs" class="rb-tabs"></nav>
+        <div id="rb-panel" class="rb-panel">
+          <div class="rb-builtin"><div id="toolbar"></div></div>
+          <div id="rb-extra" class="rb-extra"></div>
+        </div>
+      </div>
       <div id="ruler" class="ruler-host"></div>
       <main id="doc-scroll" class="doc-scroll">
         <div id="editor"></div>
@@ -84,6 +90,7 @@
       </div>
     </div>
 
+    <div id="dialog-host"></div>
     <div id="toast" class="toast"></div>
     <div id="loader" class="loader hidden"><div class="spin"></div><p>Ouverture…</p></div>
     <input id="file-input" type="file" hidden
