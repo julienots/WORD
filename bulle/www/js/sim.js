@@ -57,9 +57,9 @@ export function newGame(seed = Math.floor(Math.random() * 1e9)) {
 }
 
 function rebuildIndex() {
-  S.gridB.clear(); S.gridA.clear(); S.beingMap.clear();
+  S.gridB.clear(); S.gridA.clear(); S.beingMap.clear(); (S.animalMap ||= new Map()).clear();
   for (const b of S.beings) if (b.alive) { S.gridB.add(b); S.beingMap.set(b.id, b); }
-  for (const a of S.animals) if (a.alive) S.gridA.add(a);
+  for (const a of S.animals) { S.animalMap.set(a.id, a); if (a.alive) S.gridA.add(a); }
   for (const t of S.tribes) t.members = [];
   for (const b of S.beings) if (b.alive) { const t = tribeById(b.tribeId); if (t) t.members.push(b); }
 }

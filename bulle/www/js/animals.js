@@ -40,9 +40,10 @@ export function animalsStep(dt) {
     else if (a.sex === 'F' && a.age > d.mature && a.sat > 50 && (season <= 1) && counts[a.sp] < d.max && chance(dt * 0.006)) a.preg = 0;
     behave(a, d, dt);
   }
-  if (S.animals.length > 400 || chance(0.01)) S.animals = S.animals.filter((a) => a.alive);
+  S.animals = S.animals.filter((a) => a.alive);
 }
 
+const nearBuf = [];
 function behave(a, d, dt) {
   let sp = d.speed * (a.age < d.mature * 0.5 ? 0.7 : 1);
   let run = false;
@@ -56,7 +57,7 @@ function behave(a, d, dt) {
   } else {
     // loup : chasse quand il a faim
     if (a.sat < 55) {
-      let prey = a.prey && S.animals.find((x) => x.id === a.prey && x.alive);
+      let prey = a.prey && (S.animalMap.get(a.prey)?.alive ? S.animalMap.get(a.prey) : null);
       if (!prey) {
         let bd = 16; a.prey = null;
         for (const o of S.gridA.near(a.x, a.y, 16)) if (o.alive && o.sp !== 'wolf') { const dd = dist(o.x, o.y, a.x, a.y); if (dd < bd) { bd = dd; prey = o; } }
@@ -82,7 +83,7 @@ function behave(a, d, dt) {
     a.wait -= dt;
     if (a.wait <= 0 && dist(a.x, a.y, a.tx, a.ty) < 0.5) {
       // troupeau : rester près des congénères
-      const mates = S.gridA.near(a.x, a.y, 8).filter((o) => o.sp === a.sp && o !== a);
+      const mates = S.gridA.near(a.x, a.y, 8, nearBuf).filter((o) => o.sp === a.sp && o !== a);
       if (mates.length && chance(0.6)) { const m = pick(mates); a.tx = m.x + range(-2, 2); a.ty = m.y + range(-2, 2); }
       else { const [x, y] = randomLand(a.x, a.y, 7); a.tx = x; a.ty = y; }
       a.wait = range(0.3, 2.5) * (isNight() && d.herb ? 2 : 1);

@@ -459,12 +459,12 @@ function runAct(b, dt, tr) {
   }
   // cible mobile
   if (a.target != null && ['seek', 'heal', 'follow', 'fight'].includes(a.type)) {
-    const t = a.animal ? S.animals.find((x) => x.id === a.target) : byId(a.target);
+    const t = a.animal ? S.animalMap.get(a.target) : byId(a.target);
     if (!t || !t.alive) { b.act = null; return; }
     a.tx = t.x; a.ty = t.y;
   }
   if (a.type === 'hunt') {
-    const t = S.animals.find((x) => x.id === a.target);
+    const t = S.animalMap.get(a.target);
     if (!t || !t.alive) { b.act = null; return; }
     a.tx = t.x; a.ty = t.y; a.r = has(tr, 'chasse') ? 3.2 : 1.2;
     a.t += dt; if (a.t > 6) { b.act = null; return; }
@@ -695,7 +695,7 @@ function doAct(b, a, dt, tr) {
 }
 
 function fight(b, a, dt, tr) {
-  const t = a.animal ? S.animals.find((x) => x.id === a.target) : byId(a.target);
+  const t = a.animal ? S.animalMap.get(a.target) : byId(a.target);
   if (!t || !t.alive) { b.act = null; return; }
   if (dist(b.x, b.y, t.x, t.y) > 1.4) { a.phase = 'go'; a.r = 1; return; }
   a.cd = (a.cd || 0) - dt;
@@ -717,7 +717,7 @@ function fight(b, a, dt, tr) {
   if (b.health < 28 && chance(0.5)) { b.act = fleeAct(b, Math.atan2(b.y - t.y, b.x - t.x), 7); b.path = null; }
 }
 function hunt(b, a, dt, tr) {
-  const t = S.animals.find((x) => x.id === a.target);
+  const t = S.animalMap.get(a.target);
   if (!t || !t.alive) { b.act = null; return; }
   const d = dist(b.x, b.y, t.x, t.y);
   if (d > (a.r || 1.2) + 0.6) { a.phase = 'go'; return; }

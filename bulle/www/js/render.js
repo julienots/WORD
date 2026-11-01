@@ -271,7 +271,10 @@ export function render() {
     const a = clamp((S.voice.until - now) / 1000);
     ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.font = `700 ${Math.min(34, W / 18)}px Georgia, serif`;
     ctx.shadowColor = 'rgba(255,220,120,0.9)'; ctx.shadowBlur = 24; ctx.fillStyle = '#fff6d8';
-    ctx.fillText(S.voice.text, W / 2, H * 0.32); ctx.restore();
+    const words = S.voice.text.split(' '), lines = []; let cur = '';
+    for (const w of words) { if (cur && ctx.measureText(cur + ' ' + w).width > W * 0.88) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; }
+    lines.push(cur); const lh = Math.min(40, W / 15);
+    lines.forEach((l, k) => ctx.fillText(l, W / 2, H * 0.32 + k * lh)); ctx.restore();
   }
   if (S.victory) drawVictoryRays(now);
 }
