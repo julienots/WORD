@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060f" />
+  <title>La Bulle</title>
+  <link rel="icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <canvas id="world"></canvas>
+
+  <!-- HUD : temps de simulation -->
+  <header id="hud" class="hidden">
+    <div class="clock glass">
+      <div class="clock-main"><span id="t-hour">06:00</span><span id="t-weather" title="Météo">☀️</span><span id="t-temp">12°</span></div>
+      <div class="clock-date" id="t-date">An 1 · Printemps · Jour 1/6</div>
+      <div class="clock-sim">⏳ <span id="t-elapsed">0 j</span> simulés · ⌚ <span id="t-real">00:00:00</span></div>
+    </div>
+    <div class="stats glass">
+      <div><b id="s-pop">0</b><small>êtres</small></div>
+      <div><b id="s-tribes">0</b><small>peuples</small></div>
+      <div><b id="s-births">0</b><small>naissances</small></div>
+      <div><b id="s-deaths">0</b><small>morts</small></div>
+      <div class="energy"><div class="energy-bar"><i id="s-energy"></i></div><small>✨ <span id="s-energy-n">0</span> énergie divine</small></div>
+    </div>
+    <div class="speeds glass" id="speeds"></div>
+  </header>
+
+  <nav id="side" class="hidden">
+    <button data-panel="goal" title="But">🎯<span>But</span></button>
+    <button data-panel="log" title="Chroniques">📜<span>Chroniques</span></button>
+    <button data-panel="people" title="Peuples">👥<span>Peuples</span></button>
+    <button id="btn-fit" title="Voir la bulle">🫧<span>Bulle</span></button>
+    <button data-panel="menu" title="Menu">⚙️<span>Menu</span></button>
+  </nav>
+
+  <div id="goalbar" class="glass hidden"></div>
+
+  <footer id="powers" class="hidden"></footer>
+  <div id="power-hint" class="hidden"></div>
+
+  <section id="inspector" class="sheet hidden"></section>
+  <section id="panel" class="sheet hidden"><div class="sheet-head"><h2 id="panel-title"></h2><button class="close" data-close>✕</button></div><div id="panel-body"></div></section>
+
+  <div id="toasts"></div>
+
+  <div id="modal" class="hidden"><div class="modal-card glass" id="modal-card"></div></div>
+
+  <section id="intro">
+    <div class="intro-card">
+      <div class="orb"><div class="orb-in"></div></div>
+      <h1>La Bulle</h1>
+      <p class="tag">Un monde clos. Des vies entières. Et toi, leur dieu.</p>
+      <p class="desc">Dans une sphère de verre flottant dans le vide, des êtres naissent, ont faim, soif, froid, s’aiment, se battent, tombent malades, vieillissent et meurent. Ils inventent, prient, se posent des questions… et finissent par comprendre qu’ils sont enfermés.</p>
+      <p class="goal"><b>Ton but :</b> guider cette civilisation jusqu’à la <b>Libération</b> — qu’ils découvrent la vérité sur la bulle et construisent <b>Le Passage</b> pour franchir la Paroi. Sans les laisser s’éteindre.</p>
+      <div class="intro-btns">
+        <button id="btn-new" class="big">Créer une nouvelle bulle</button>
+        <button id="btn-continue" class="big alt hidden">Continuer la simulation</button>
+      </div>
+      <p class="hint">Glisse pour te déplacer · pince ou molette pour zoomer · touche un être pour lire ses pensées</p>
+    </div>
+  </section>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="sp" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#1b2a5a"/><stop offset="1" stop-color="#05060f"/></radialGradient>
+    <radialGradient id="gl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#9fd8ff" stop-opacity=".08"/><stop offset=".9" stop-color="#9fd8ff" stop-opacity=".18"/><stop offset="1" stop-color="#d8f0ff" stop-opacity=".7"/></radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a8cdc"/><stop offset="1" stop-color="#bfe0f5"/></linearGradient>
+    <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e4a2a"/><stop offset=".5" stop-color="#5c5650"/><stop offset="1" stop-color="#1d1a1c"/></linearGradient>
+    <clipPath id="c"><circle cx="256" cy="256" r="196"/></clipPath>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#sp)"/>
+  <g clip-path="url(#c)">
+    <rect x="40" y="40" width="440" height="260" fill="url(#sky)"/>
+    <circle cx="180" cy="150" r="26" fill="#fff6c8"/>
+    <rect x="40" y="290" width="440" height="200" fill="url(#soil)"/>
+    <ellipse cx="256" cy="292" rx="186" ry="72" fill="#5ea844"/>
+    <ellipse cx="300" cy="300" rx="50" ry="16" fill="#3f86c0"/>
+    <path d="M150 285 l14 -40 l14 40z M175 290 l12 -34 l12 34z" fill="#1f4d2e"/>
+    <path d="M330 268 l22 -30 l22 30z" fill="#8a8580"/>
+    <circle cx="240" cy="296" r="5" fill="#d9534f"/><circle cx="256" cy="300" r="5" fill="#3b7dd8"/>
+  </g>
+  <circle cx="256" cy="256" r="196" fill="url(#gl)" stroke="#d8f0ff" stroke-opacity=".8" stroke-width="5"/>
+  <path d="M120 170 A150 150 0 0 1 200 95" stroke="#fff" stroke-opacity=".6" stroke-width="12" stroke-linecap="round" fill="none"/>
+</svg>

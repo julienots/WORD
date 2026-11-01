@@ -38,6 +38,10 @@ L'APK est signé avec une clé de développement incluse (`android/keystore/work
 Avant une publication sur le Play Store, crée ta propre clé et ajoute-la dans les *secrets* GitHub
 (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`) : le workflow l'utilisera automatiquement.
 
+## Autre projet du dépôt : La Bulle
+
+Le dossier [`bulle/`](bulle/README.md) contient **La Bulle**, une simulation de vie 2.5D dans un monde clos (APK Android séparé, workflow *Build La Bulle APK*).
+
 ## Licence
 
 Le moteur DOCX [SuperDoc](https://www.superdoc.dev) est sous licence AGPL-3.0 ; .WORKS est donc distribué sous AGPL-3.0

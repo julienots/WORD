@@ -1,0 +1,9 @@
+{
+  "appId": "com.superessence.labulle",
+  "appName": "La Bulle",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#05060f"
+  }
+}
