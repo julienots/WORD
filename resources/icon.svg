@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#1c1c1c"/><stop offset="1" stop-color="#000"/></linearGradient>
+  <radialGradient id="glow" cx=".3" cy=".25" r=".8"><stop offset="0" stop-color="#FFCB1F" stop-opacity=".22"/>
+  <stop offset="1" stop-color="#FFCB1F" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <g transform="translate(512 512) scale(.86) translate(-512 -522)">
+<g id="mark">
+  
+  <path transform="translate(26,30)" fill="#2b2b2b" d="M300 196 H640 L760 316 V820 Q760 846 734 846 H300 Q274 846 274 820 V222 Q274 196 300 196 Z"/>
+  
+  <path fill="#FFCB1F" d="M300 196 H640 L760 316 V820 Q760 846 734 846 H300 Q274 846 274 820 V222 Q274 196 300 196 Z"/>
+  
+  <path fill="#E0A800" d="M640 196 V292 Q640 316 664 316 H760 Z"/>
+  
+  <polyline transform="translate(10,12)" points="348,418 428,690 517,482 606,690 686,418" fill="none" stroke="#B88A00" stroke-width="88" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <polyline points="348,418 428,690 517,482 606,690 686,418" fill="none" stroke="#0B0B0B" stroke-width="88" stroke-linejoin="round" stroke-linecap="round"/>
+  
+  <rect x="340" y="756" width="230" height="22" rx="11" fill="#0B0B0B" opacity=".85"/>
+  <rect x="590" y="756" width="104" height="22" rx="11" fill="#0B0B0B" opacity=".35"/>
+  
+  <circle cx="190" cy="800" r="58" fill="#2b2b2b" transform="translate(14,16)"/>
+  <circle cx="190" cy="800" r="58" fill="#FFFFFF"/>
+</g>
+</g></svg>
