@@ -1,0 +1,9 @@
+<!-- .BEATS mark: equalizer bars forming a waveform, SuperEssence yellow -->
+<g>
+  <rect x="232" y="452" width="64" height="140" rx="32" fill="#FFCB1F" opacity=".55"/>
+  <rect x="332" y="352" width="64" height="340" rx="32" fill="#FFCB1F" opacity=".8"/>
+  <rect x="432" y="232" width="64" height="580" rx="32" fill="#FFCB1F"/>
+  <rect x="532" y="302" width="64" height="440" rx="32" fill="#FFFFFF"/>
+  <rect x="632" y="402" width="64" height="240" rx="32" fill="#FFCB1F"/>
+  <rect x="732" y="472" width="64" height="100" rx="32" fill="#FFCB1F" opacity=".55"/>
+</g>

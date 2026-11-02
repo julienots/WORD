@@ -3,6 +3,9 @@ name: Build .WORKS APK
 on:
   push:
     branches: ['**']
+    paths-ignore:
+      - 'beats/**'
+      - '.github/workflows/beats.yml'
   workflow_dispatch:
 
 permissions:

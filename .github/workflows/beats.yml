@@ -1,0 +1,81 @@
+name: Build .BEATS APK
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'beats/**'
+      - '.github/workflows/beats.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: beats
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: beats/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Android SDK (preinstalled on the runner)
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Install & build web app
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+
+      - name: Optional private signing key
+        env:
+          BEATS_KEYSTORE_BASE64: ${{ secrets.BEATS_KEYSTORE_BASE64 }}
+        if: ${{ env.BEATS_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$BEATS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/beats.jks"
+          echo "BEATS_KEYSTORE_FILE=$RUNNER_TEMP/beats.jks" >> "$GITHUB_ENV"
+          echo "BEATS_KEYSTORE_PASSWORD=${{ secrets.BEATS_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "BEATS_KEY_ALIAS=${{ secrets.BEATS_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "BEATS_KEY_PASSWORD=${{ secrets.BEATS_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build signed APK
+        working-directory: beats/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 1.0.${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk "../BEATS-1.0.${{ github.run_number }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BEATS-apk
+          path: beats/BEATS-*.apk
+
+      - name: Publish release (download link for the phone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: beats-v1.0.${{ github.run_number }}
+          name: .BEATS 1.0.${{ github.run_number }} — studio audio + voix IA
+          target_commitish: ${{ github.sha }}
+          files: beats/BEATS-*.apk
+          body: |
+            **.BEATS** — studio de montage audio + ajouts automatiques IA + voix IA, par SuperEssence Studio.
+            Télécharge le fichier `BEATS-….apk` ci-dessous sur ton téléphone Android et installe-le
+            (autorise « sources inconnues » si Android le demande).

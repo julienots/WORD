@@ -1,0 +1,28 @@
+{
+  "name": "dotbeats",
+  "private": true,
+  "version": "1.0.0",
+  "description": ".BEATS — studio de montage audio + voix IA, par SuperEssence Studio",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "node scripts/make-icons.mjs",
+    "android:sync": "npm run build && npx cap sync android"
+  },
+  "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "sharp": "^0.34.5",
+    "vite": "^7.3.7"
+  }
+}

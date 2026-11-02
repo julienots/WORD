@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#1c1c1c"/><stop offset="1" stop-color="#000"/></linearGradient>
+  <radialGradient id="glow" cx=".3" cy=".25" r=".8"><stop offset="0" stop-color="#FFCB1F" stop-opacity=".22"/>
+  <stop offset="1" stop-color="#FFCB1F" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="url(#glow)"/>
+  <g transform="translate(512 512) scale(.86) translate(-512 -522)">
+<g>
+  <rect x="232" y="452" width="64" height="140" rx="32" fill="#FFCB1F" opacity=".55"/>
+  <rect x="332" y="352" width="64" height="340" rx="32" fill="#FFCB1F" opacity=".8"/>
+  <rect x="432" y="232" width="64" height="580" rx="32" fill="#FFCB1F"/>
+  <rect x="532" y="302" width="64" height="440" rx="32" fill="#FFFFFF"/>
+  <rect x="632" y="402" width="64" height="240" rx="32" fill="#FFCB1F"/>
+  <rect x="732" y="472" width="64" height="100" rx="32" fill="#FFCB1F" opacity=".55"/>
+</g>
+</g></svg>

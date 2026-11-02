@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">.BEATS</string>
+    <string name="title_activity_main">.BEATS</string>
+    <string name="package_name">com.superessence.beats</string>
+    <string name="custom_url_scheme">com.superessence.beats</string>
+</resources>

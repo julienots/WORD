@@ -16,6 +16,12 @@
 - Partage direct vers Word, Drive, Gmail, WhatsApp… et « Ouvrir avec .WORKS » depuis le gestionnaire de fichiers.
 - Polices métriquement compatibles embarquées (Calibri → Carlito, Cambria → Caladea, Arial → Arimo, Times New Roman → Tinos, Courier New → Cousine) pour que les lignes et les pages tombent exactement au même endroit que sur PC.
 
+## 🎧 Nouvelle app : .BEATS
+
+Le dossier [`beats/`](beats/) contient une **deuxième application séparée** : **.BEATS**, studio de montage audio
+multipiste avec ajouts automatiques par IA (batterie, basse, accords, mélodie, FX qui suivent le tempo, la tonalité et les accords
+de ta musique) et une section **Voix IA** (clonage de voix à partir d'un MP3). Son APK est publié dans les Releases sous le nom `BEATS-1.0.x.apk`.
+
 ## Télécharger l'APK
 
 Chaque push compile automatiquement l'APK (onglet **Actions** et page **Releases** du dépôt).
