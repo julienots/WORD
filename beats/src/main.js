@@ -11,6 +11,7 @@ import { generate, STYLES, ELEMENTS } from './generator.js';
 import * as D from './dsp.js';
 import * as V from './voice.js';
 import { saveProject, listProjects, loadProject, deleteProject } from './store.js';
+import { ic, hydrateIcons } from './icons.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -31,7 +32,7 @@ const nextFrame = () => new Promise((r) => setTimeout(r, 30));
 async function task(text, fn) {
   busy(true, text); await nextFrame();
   try { return await fn((p, t) => busy(true, t || text, p)); }
-  catch (e) { console.error(e); toast('⚠ ' + (e.message || e), 4500); }
+  catch (e) { console.error(e); toast(e.message || String(e), 4500); }
   finally { busy(false); }
 }
 const fmt = (t) => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`; };
@@ -53,6 +54,7 @@ function changed() { renderTimeline(); clearTimeout(dirtyT); dirtyT = setTimeout
 function sheet(html, bind) {
   $('#sheet-body').innerHTML = html;
   $('#sheet').classList.remove('hidden'); $('#sheet-bg').classList.remove('hidden');
+  hydrateIcons($('#sheet-body'));
   bind?.($('#sheet-body'));
 }
 function closeSheet() { $('#sheet').classList.add('hidden'); $('#sheet-bg').classList.add('hidden'); }
@@ -107,10 +109,10 @@ function renderTimeline() {
   $('#proj-name').value = p.name;
   $('#bpm').value = Math.round(p.bpm * 10) / 10;
   $('#key-badge').textContent = p.key ? p.key.name : 'Tonalité ?';
-  $('#btn-snap').textContent = p.snap ? 'Grille ✓' : 'Grille ✗';
   $('#btn-snap').classList.toggle('on', p.snap);
   $('#btn-metro').classList.toggle('on', ui.metro);
   $('#tl-empty').style.display = p.tracks.length ? 'none' : 'flex';
+  $('#playhead').style.display = p.tracks.length ? '' : 'none';
   const total = Math.max(E.projectEnd() + 30, 60), width = total * ui.pps;
   $('#tl-inner').style.width = `${HEAD + width}px`;
   // ruler
@@ -126,7 +128,7 @@ function renderTimeline() {
     const row = document.createElement('div'); row.className = 'trow'; row.dataset.track = t.id;
     row.innerHTML = `<div class="thead" style="--c:${t.color}">
         <b class="tname"></b>
-        <div class="tbtns"><button class="m ${t.mute ? 'on' : ''}">M</button><button class="s ${t.solo ? 'on' : ''}">S</button><button class="cfg">⚙</button></div>
+        <div class="tbtns"><button class="m ${t.mute ? 'on' : ''}">M</button><button class="s ${t.solo ? 'on' : ''}">S</button><button class="cfg">${ic('gear')}</button></div>
       </div><div class="lane" style="width:${width}px"></div>`;
     row.querySelector('.tname').textContent = t.name;
     row.querySelector('.m').onclick = () => { t.mute = !t.mute; liveRestart(); changed(); };
@@ -260,14 +262,14 @@ function stopMetro() { metroNodes.forEach((o) => { try { o.stop(); } catch {} })
 function playToggle() {
   if (transport.playing) { E.stop(); stopMetro(); }
   else { if (E.now() >= E.projectEnd() - 0.05) E.seek(0); E.play(transport.pos); startMetro(); loop(); }
-  $('#btn-play').textContent = transport.playing ? '❚❚' : '▶';
+  $('#btn-play').innerHTML = ic(transport.playing ? 'pause' : 'play');
 }
 function liveRestart() { if (transport.playing) { const t = E.now(); E.play(t); startMetro(); } }
 const vuData = new Float32Array(2048);
 function loop() {
   if (!transport.playing) { drawVu(0); return; }
   const t = E.now();
-  if (t > E.projectEnd() + 0.3 && !ui.rec) { E.stop(); stopMetro(); E.seek(E.projectEnd()); $('#btn-play').textContent = '▶'; updatePlayhead(); drawVu(0); return; }
+  if (t > E.projectEnd() + 0.3 && !ui.rec) { E.stop(); stopMetro(); E.seek(E.projectEnd()); $('#btn-play').innerHTML = ic('play'); updatePlayhead(); drawVu(0); return; }
   updatePlayhead();
   const tl = $('#timeline'), x = HEAD + t * ui.pps;
   if (x > tl.scrollLeft + tl.clientWidth - 40 || x < tl.scrollLeft + HEAD) tl.scrollLeft = x - HEAD - 30;
@@ -290,7 +292,7 @@ $('#bpm').onchange = () => { const v = +$('#bpm').value; if (v >= 40 && v <= 240
 $('#proj-name').onchange = () => { project.cur.name = $('#proj-name').value.trim() || 'Mon son'; changed(); };
 $('#btn-undo').onclick = () => { if (E.undo()) { ui.sel = null; liveRestart(); changed(); } else toast('Rien à annuler'); };
 $('#btn-redo').onclick = () => { if (E.redo()) { liveRestart(); changed(); } };
-$('#btn-save').onclick = () => task('Enregistrement…', async () => { await saveProject(); toast('✓ Projet enregistré'); });
+$('#btn-save').onclick = () => task('Enregistrement…', async () => { await saveProject(); toast('Projet enregistré'); });
 
 /* ================= import ================= */
 async function importFiles(files, mode = 'track') {
@@ -316,7 +318,7 @@ async function importFiles(files, mode = 'track') {
         const a = await analyse(buffer, { onProgress: (x) => prog(x, 'Analyse du tempo et de la tonalité…') });
         buffers.get(id).meta = { bpm: a.bpm, key: a.key };
         p.analysis = a; p.bpm = a.bpm; p.key = a.key;
-        toast(`🎵 ${a.bpm} BPM · ${a.key.name}`);
+        toast(`${a.bpm} BPM · ${a.key.name}`);
       } else if (!buffers.get(id).meta.bpm && buffer.duration > 8) {
         const a = await analyse(buffer, { end: Math.min(buffer.duration, 60) });
         buffers.get(id).meta = { bpm: a.bpm, key: a.key };
@@ -328,9 +330,9 @@ async function importFiles(files, mode = 'track') {
 function importSheet() {
   sheet(`<h3>Ajouter des sons</h3>
     <div class="tools">
-      <button class="tool" data-m="track"><b>🎼 Nouvelle piste</b><small>Superposer (chaque son sur sa piste, au début)</small></button>
-      <button class="tool" data-m="append"><b>⏭ À la suite</b><small>Assembler : met le son à la fin du morceau</small></button>
-      <button class="tool" data-m="here"><b>📍 À la tête de lecture</b><small>Rajouter un morceau à l'endroit précis (${fmt(E.now())})</small></button>
+      <button class="tool" data-m="track"><b>${ic('layers')}Nouvelle piste</b><small>Superposer (chaque son sur sa piste, au début)</small></button>
+      <button class="tool" data-m="append"><b>${ic('next')}À la suite</b><small>Assembler : met le son à la fin du morceau</small></button>
+      <button class="tool" data-m="here"><b>${ic('pin')}À la tête de lecture</b><small>Rajouter un morceau à l'endroit précis (${fmt(E.now())})</small></button>
     </div>`, (b) => b.querySelectorAll('[data-m]').forEach((x) => (x.onclick = async () => { closeSheet(); importFiles(await pickFiles(true, 'audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,video/mp4'), x.dataset.m); })));
 }
 $('#btn-import').onclick = importSheet;
@@ -373,8 +375,8 @@ $('#btn-rec').onclick = async () => {
     ui.rec = { rec: recorder(stream), at };
     $('#btn-rec').classList.add('on');
     if (!transport.playing && project.cur.tracks.length) playToggle();
-    toast('● Enregistrement… appuie encore pour arrêter');
-  } catch (e) { toast('⚠ ' + e.message); }
+    toast('Enregistrement… appuie encore pour arrêter');
+  } catch (e) { toast(e.message); }
 };
 
 /* ================= clip actions ================= */
@@ -394,7 +396,7 @@ function clipAct(act) {
     case 'dup': { E.snapshot(); const c2 = { ...c, id: Math.random().toString(36).slice(2, 10), start: clipEnd(c) }; t.clips.push(c2); ui.sel = c2.id; break; }
     case 'loop':
       return sheet(`<h3>Boucler le clip</h3><p class="muted">Répète le clip à la suite (calé à la grille).</p>
-        <div class="chips">${[2, 4, 8, 16].map((n) => `<button class="chip" data-n="${n}">×${n}</button>`).join('')}</div>`, (b) =>
+        <div class="chips">${[2, 4, 8, 16].map((n) => `<button class="btn" data-n="${n}">×${n}</button>`).join('')}</div>`, (b) =>
         b.querySelectorAll('[data-n]').forEach((x) => (x.onclick = () => {
           E.snapshot(); let s = clipEnd(c);
           for (let i = 1; i < +x.dataset.n; i++) { t.clips.push({ ...c, id: Math.random().toString(36).slice(2, 10), start: s }); s += clipLen(c); }
@@ -430,7 +432,7 @@ function clipAct(act) {
         <h3>Traitement pro (garde la qualité)</h3>
         <label class="sl">Tempo seul (%) <input type="range" id="ts" min="50" max="200" step="1" value="100" /><output id="tsv">100%</output></label>
         <label class="sl">Tonalité seule (demi-tons) <input type="range" id="ps" min="-12" max="12" step="1" value="0" /><output id="psv">0</output></label>
-        <button class="pill y" id="apply">Appliquer</button>`, (b) => {
+        <button class="btn y" id="apply">Appliquer</button>`, (b) => {
         E.snapshot();
         const meta = buffers.get(c.bufId).meta || {};
         if (meta.bpm) b.querySelector('h3').insertAdjacentHTML('afterend', `<p class="small">Tempo d'origine : <b>${meta.bpm} BPM</b>${meta.key ? ' · ' + meta.key.name : ''}</p>`);
@@ -462,7 +464,7 @@ function clipAct(act) {
       const out = act === 'reverse' ? D.reverseBuffer(ctx, src) : D.normalizeBuffer(ctx, src);
       const id = E.addBuffer(out, c.name, null, buffers.get(c.bufId).meta);
       Object.assign(c, { bufId: id, offset: 0, dur: out.duration });
-      toast(act === 'reverse' ? '⇄ Clip inversé' : '📈 Volume optimisé'); break;
+      toast(act === 'reverse' ? 'Clip inversé' : 'Volume optimisé'); break;
     }
     case 'ai': ui.zone = 'clip'; setSeg('#zone', 'clip'); setSeg('#ana-src', 'clip'); tab('ai'); return;
   }
@@ -486,8 +488,8 @@ function trackSheet(t) {
     <label class="sl">Écho (calé au tempo) <input type="range" id="fx-dly" min="0" max="1" step="0.02" value="${fx.delay}" /></label>
     <label class="ck"><input type="checkbox" id="fx-comp" ${fx.comp ? 'checked' : ''}/> Compresseur (son plus dense)</label>
     <div class="row wrap">
-      <button class="pill" id="t-bounce">Figer la piste (bounce)</button>
-      <button class="pill danger" id="t-del">Supprimer la piste</button>
+      <button class="btn" id="t-bounce">Figer la piste (bounce)</button>
+      <button class="btn danger" id="t-del">Supprimer la piste</button>
     </div>`, (b) => {
     E.snapshot();
     b.querySelector('#tn').value = t.name;
@@ -543,7 +545,7 @@ async function runAnalysis() {
     E.snapshot();
     p.analysis = a; p.bpm = a.bpm; p.key = a.key;
     renderAnalysis(); renderTimeline();
-    toast(`🎵 ${a.bpm} BPM · ${a.key.name}`);
+    toast(`${a.bpm} BPM · ${a.key.name}`);
   });
 }
 $('#btn-analyse').onclick = runAnalysis;
@@ -586,7 +588,7 @@ async function doGenerate() {
     E.snapshot();
     await placeGenerated(res);
     changed();
-    toast(`✨ ${res.length} piste(s) ajoutée(s) · ${STYLES[ui.style].name}`);
+    toast(`${res.length} piste(s) ajoutée(s) · ${STYLES[ui.style].name}`);
     tab('studio');
     if (!transport.playing) { E.seek(from); playToggle(); }
   });
@@ -633,7 +635,7 @@ $('#btn-automix').onclick = () => {
     pos = clipEnd(c);
   });
   p.tracks = p.tracks.filter((t) => t.clips.length || t === A || t === B);
-  changed(); tab('studio'); toast(`🎚 ${list.length} morceaux enchaînés`);
+  changed(); tab('studio'); toast(`${list.length} morceaux enchaînés`);
 };
 $('#btn-extend').onclick = () => task('Recherche du meilleur passage…', async () => {
   const p = project.cur;
@@ -671,7 +673,7 @@ $('#btn-extend').onclick = () => task('Recherche du meilleur passage…', async 
     Array.from({ length: nb }, (_, i) => ({ ...copy[i % seg], t: insertAt + i * barSec })),
     a.bars.filter((b) => b.t >= insertAt - 0.01).map((b) => ({ ...b, t: b.t + nb * barSec })));
   changed(); tab('studio');
-  toast(`➕ ${nb} mesures ajoutées (mesures ${best + 1}–${best + seg} rejouées)`);
+  toast(`${nb} mesures ajoutées (mesures ${best + 1}–${best + seg} rejouées)`);
 });
 $('#btn-intro').onclick = async () => {
   const p = project.cur;
@@ -703,18 +705,18 @@ $('#btn-outro').onclick = () => {
   const tr = p.tracks.find((t) => t.name === 'IA · FX transitions') || E.addTrack('IA · FX transitions', '#ffcb1f');
   E.addClip(tr, id, Math.max(0, end - fade), { fadeIn: 1, fadeOut: 2, gain: 0.6 });
   tr.fx.reverb = 0.6;
-  changed(); tab('studio'); toast('🌙 Outro ajoutée');
+  changed(); tab('studio'); toast('Outro ajoutée');
 };
 $('#btn-master').onclick = () => {
   const p = project.cur; E.snapshot();
   p.master.limiter = true; p.master.vol = 1.05;
   p.tracks.forEach((t) => { if (!t.name.startsWith('IA ·')) { t.fx.low = Math.max(t.fx.low, 2); t.fx.high = Math.max(t.fx.high, 2.5); t.fx.comp = true; } });
-  liveRestart(); changed(); toast('💎 Mastering appliqué (EQ + compresseur + limiteur)');
+  liveRestart(); changed(); toast('Mastering appliqué (EQ + compresseur + limiteur)');
 };
 $('#btn-match').onclick = () => {
   const p = project.cur; E.snapshot(); let n = 0;
   for (const { c } of realClips()) { const m = buffers.get(c.bufId).meta; if (m?.bpm) { let r = p.bpm / m.bpm; if (r > 1.5) r /= 2; if (r < 0.67) r *= 2; c.rate = r; n++; } }
-  liveRestart(); changed(); toast(n ? `🎯 ${n} morceau(x) calé(s) sur ${p.bpm} BPM` : 'Aucun tempo détecté sur les morceaux');
+  liveRestart(); changed(); toast(n ? `${n} morceau(x) calé(s) sur ${p.bpm} BPM` : 'Aucun tempo détecté sur les morceaux');
 };
 
 /* ================= export ================= */
@@ -739,7 +741,7 @@ $('#btn-export').onclick = () => {
   sheet(`<h3>Exporter le mix</h3>
     <div class="seg" id="ex-fmt"><button data-v="mp3-320" class="on">MP3 320k</button><button data-v="mp3-192">MP3 192k</button><button data-v="wav">WAV</button></div>
     <label class="ck"><input type="checkbox" id="ex-stems" /> Exporter aussi chaque piste séparément (stems)</label>
-    <div class="row"><button class="pill y big" id="ex-save">💾 Enregistrer</button><button class="pill big" id="ex-share">Partager</button></div>`, (b) => {
+    <div class="row"><button class="btn primary grow" id="ex-save">${ic('download')}<span>Enregistrer</span></button><button class="btn grow" id="ex-share">${ic('share')}<span>Partager</span></button></div>`, (b) => {
     b.querySelectorAll('#ex-fmt button').forEach((x) => (x.onclick = () => setSeg('#ex-fmt', x.dataset.v)));
     const run = (share) => { const fm = segVal('#ex-fmt'), stems = b.querySelector('#ex-stems').checked; closeSheet(); exportMix(fm, share, stems); };
     b.querySelector('#ex-save').onclick = () => run(false);
@@ -755,7 +757,7 @@ function exportMix(fm, share, stems) {
     const blob = await encode(buf, fm, (x) => prog(x, 'Encodage…'));
     const name = `${safe(project.cur.name)}.${fm === 'wav' ? 'wav' : 'mp3'}`;
     if (share) await shareBlob(blob, name);
-    else { const r = await saveBlob(blob, name); toast(`✓ ${r.name}${r.where ? ' → ' + r.where : ''}`, 4000); }
+    else { const r = await saveBlob(blob, name); toast(`Enregistré : ${r.name}${r.where ? ' → ' + r.where : ''}`, 4000); }
     if (stems) for (const t of project.cur.tracks) {
       if (!t.clips.length) continue;
       prog(0, `Piste : ${t.name}`);
@@ -772,7 +774,7 @@ async function renderProjects() {
   $('#proj-list').innerHTML = '';
   for (const p of list) {
     const li = document.createElement('li');
-    li.innerHTML = `<button class="po"><b></b><small>${new Date(p.updated).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} · ${p.tracks.length} piste(s) · ${Math.round(p.bpm)} BPM</small></button><button class="pd">✕</button>`;
+    li.innerHTML = `<button class="po"><b></b><small>${new Date(p.updated).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} · ${p.tracks.length} piste(s) · ${Math.round(p.bpm)} BPM</small></button><button class="pd">${ic('trash')}</button>`;
     li.querySelector('b').textContent = p.name;
     li.querySelector('.po').onclick = () => task('Ouverture…', async () => { E.stop(); await loadProject(p.id); ui.sel = null; tab('studio'); });
     li.querySelector('.pd').onclick = async () => { if (confirm(`Supprimer « ${p.name} » ?`)) { await deleteProject(p.id); renderProjects(); } };
@@ -788,35 +790,35 @@ $('#btn-new').onclick = async () => {
 const vs = { cloneFiles: [], stsBlob: null, labSrc: null, labRef: null, result: null, voice: null };
 function refreshKey() {
   const k = V.getKey();
-  $('#key-state').textContent = k ? 'Clé enregistrée ✓' : 'Pas de clé';
+  $('#key-state').textContent = k ? 'Clé enregistrée' : 'Pas de clé';
   $('#key-state').classList.toggle('ok', !!k);
   $('#xi-key').value = k ? '••••••••' + k.slice(-4) : '';
 }
-$('#btn-key').onclick = () => { const v = $('#xi-key').value; if (v && !v.startsWith('••')) { V.setKey(v); toast('✓ Clé enregistrée'); syncVoices(); } refreshKey(); };
+$('#btn-key').onclick = () => { const v = $('#xi-key').value; if (v && !v.startsWith('••')) { V.setKey(v); toast('Clé enregistrée'); syncVoices(); } refreshKey(); };
 function renderVoices() {
   const list = V.myVoices();
   if (!vs.voice && list[0]) vs.voice = list[0].id;
   $('#voices').innerHTML = list.length ? '' : '<p class="muted small">Aucune voix clonée pour l’instant.</p>';
   for (const v of list) {
     const el = document.createElement('div'); el.className = 'voice' + (v.id === vs.voice ? ' on' : '');
-    el.innerHTML = '<span class="vi">🗣</span><b></b><button class="vd">✕</button>';
+    el.innerHTML = `<span class="vi">${ic('user')}</span><b></b><button class="vd">${ic('x')}</button>`;
     el.querySelector('b').textContent = v.name;
     el.onclick = () => { vs.voice = v.id; renderVoices(); };
     el.querySelector('.vd').onclick = async (e) => { e.stopPropagation(); if (confirm(`Supprimer la voix « ${v.name} » ?`)) { await V.deleteVoice(v.id); if (vs.voice === v.id) vs.voice = null; renderVoices(); } };
     $('#voices').appendChild(el);
   }
 }
-const syncVoices = () => V.syncVoices().then(renderVoices).catch((e) => toast('⚠ ' + e.message));
+const syncVoices = () => V.syncVoices().then(renderVoices).catch((e) => toast(e.message));
 $('#btn-sync').onclick = () => task('Synchronisation…', syncVoices);
 function renderCloneFiles() {
-  $('#clone-files').innerHTML = vs.cloneFiles.map((f, i) => `<li>🎵 ${f.name.replace(/</g, '')} <small>${Math.round(f.size / 1024)} Ko</small><button data-i="${i}">✕</button></li>`).join('');
+  $('#clone-files').innerHTML = vs.cloneFiles.map((f, i) => `<li>${ic('music')} ${f.name.replace(/</g, '')} <small>${Math.round(f.size / 1024)} Ko</small><button data-i="${i}">${ic('x')}</button></li>`).join('');
   $$('#clone-files button').forEach((b) => (b.onclick = () => { vs.cloneFiles.splice(+b.dataset.i, 1); renderCloneFiles(); }));
 }
 $('#btn-clone-files').onclick = async () => { vs.cloneFiles.push(...(await pickFiles(true, 'audio/*'))); renderCloneFiles(); };
 async function recordButton(btn, onDone) {
-  if (btn._rec) { const r = btn._rec; btn._rec = null; btn.classList.remove('on'); btn.textContent = btn._label; onDone(await r.stop()); return; }
-  try { const s = await getMic(); btn._rec = recorder(s); btn._label = btn.textContent; btn.textContent = '■ Arrêter'; btn.classList.add('on'); }
-  catch (e) { toast('⚠ ' + e.message); }
+  if (btn._rec) { const r = btn._rec; btn._rec = null; btn.classList.remove('on'); btn.innerHTML = btn._label; onDone(await r.stop()); return; }
+  try { const s = await getMic(); btn._rec = recorder(s); btn._label = btn.innerHTML; btn.innerHTML = ic('stop') + '<span>Arrêter</span>'; btn.classList.add('on'); }
+  catch (e) { toast(e.message); }
 }
 $('#btn-clone-rec').onclick = (e) => recordButton(e.currentTarget, (b) => { vs.cloneFiles.push(new File([b], `micro-${vs.cloneFiles.length + 1}.${b.type.includes('mp4') ? 'm4a' : 'webm'}`, { type: b.type })); renderCloneFiles(); });
 $('#btn-clone').onclick = () => {
@@ -825,7 +827,7 @@ $('#btn-clone').onclick = () => {
   task('Clonage de la voix…', async () => {
     const id = await V.cloneVoice($('#clone-name').value.trim() || 'Ma voix', vs.cloneFiles);
     vs.voice = id; vs.cloneFiles = []; renderCloneFiles(); renderVoices();
-    toast('🧬 Voix créée ! Tu peux maintenant lui faire dire ce que tu veux.');
+    toast('Voix créée ! Tu peux maintenant lui faire dire ce que tu veux.');
   });
 };
 async function showResult(blob, name) {
@@ -844,8 +846,8 @@ $('#btn-tts').onclick = () => {
     showResult(blob, `Voix - ${text.slice(0, 24)}`);
   });
 };
-$('#btn-sts-rec').onclick = (e) => recordButton(e.currentTarget, (b) => { vs.stsBlob = b; $('#sts-src').textContent = `✓ Enregistrement prêt (${Math.round(b.size / 1024)} Ko)`; });
-$('#btn-sts-file').onclick = async () => { const [f] = await pickFiles(false, 'audio/*'); if (f) { vs.stsBlob = f; $('#sts-src').textContent = '✓ ' + f.name; } };
+$('#btn-sts-rec').onclick = (e) => recordButton(e.currentTarget, (b) => { vs.stsBlob = b; $('#sts-src').textContent = `Enregistrement prêt (${Math.round(b.size / 1024)} Ko)`; });
+$('#btn-sts-file').onclick = async () => { const [f] = await pickFiles(false, 'audio/*'); if (f) { vs.stsBlob = f; $('#sts-src').textContent = f.name; } };
 $('#btn-sts').onclick = () => {
   if (!vs.stsBlob) return toast('Enregistre-toi ou choisis un fichier');
   if (!vs.voice) return toast('Crée ou choisis une voix');
@@ -881,10 +883,10 @@ $('#btn-v-studio').onclick = () => task('Ajout au Studio…', async () => {
   const id = E.addBuffer(buffer, name, blob);
   const tr = project.cur.tracks.find((t) => t.name === 'Voix IA') || E.addTrack('Voix IA', '#ff5d8f');
   E.addClip(tr, id, E.now());
-  changed(); tab('studio'); toast('➜ Voix ajoutée à la tête de lecture');
+  changed(); tab('studio'); toast('Voix ajoutée à la tête de lecture');
 });
 $('#btn-v-share').onclick = () => vs.result && shareBlob(vs.result.blob, `${safe(vs.result.name)}.${vs.result.blob.type.includes('wav') ? 'wav' : 'mp3'}`);
-$('#btn-v-save').onclick = async () => { if (!vs.result) return; const r = await saveBlob(vs.result.blob, `${safe(vs.result.name)}.${vs.result.blob.type.includes('wav') ? 'wav' : 'mp3'}`); toast(`✓ ${r.name}${r.where ? ' → ' + r.where : ''}`); };
+$('#btn-v-save').onclick = async () => { if (!vs.result) return; const r = await saveBlob(vs.result.blob, `${safe(vs.result.name)}.${vs.result.blob.type.includes('wav') ? 'wav' : 'mp3'}`); toast(`Enregistré : ${r.name}${r.where ? ' → ' + r.where : ''}`); };
 
 /* ================= boot ================= */
 document.addEventListener('keydown', (e) => {
@@ -902,6 +904,6 @@ if (isNative) {
   });
   App.addListener('pause', () => { saveProject().catch(() => {}); });
 }
-refreshKey(); renderVoices(); renderTimeline(); labInfo();
+hydrateIcons(); refreshKey(); renderVoices(); renderTimeline(); labInfo();
 listProjects().then((l) => { if (l[0]) loadProject(l[0].id).then(() => renderTimeline()).catch(() => {}); }).catch(() => {});
 window.__beats = { E, project, buffers };

@@ -13,19 +13,19 @@
       <header class="topbar">
         <img src="./icon.svg" class="logo" alt="" />
         <input id="proj-name" value="Mon son" spellcheck="false" aria-label="Nom du projet" />
-        <button class="ib" id="btn-undo" title="Annuler">↶</button>
-        <button class="ib" id="btn-redo" title="Rétablir">↷</button>
-        <button class="ib" id="btn-save" title="Enregistrer">💾</button>
-        <button class="pill y" id="btn-export">Exporter</button>
+        <button class="ib" id="btn-undo" title="Annuler"><i data-i="undo"></i></button>
+        <button class="ib" id="btn-redo" title="Rétablir"><i data-i="redo"></i></button>
+        <button class="ib" id="btn-save" title="Enregistrer"><i data-i="save"></i></button>
+        <button class="btn primary" id="btn-export"><i data-i="download"></i><span>Exporter</span></button>
       </header>
       <div class="infobar">
-        <label>BPM <input id="bpm" type="number" min="40" max="240" step="1" value="120" /></label>
+        <label class="bpm">BPM <input id="bpm" type="number" min="40" max="240" step="1" value="120" /></label>
         <span id="key-badge" class="badge">Tonalité ?</span>
-        <button class="chip" id="btn-snap">Grille ✓</button>
-        <button class="chip" id="btn-metro">Métronome</button>
+        <button class="tg" id="btn-snap" title="Grille magnétique"><i data-i="grid"></i></button>
+        <button class="tg" id="btn-metro" title="Métronome"><i data-i="metro"></i></button>
         <span class="grow"></span>
-        <button class="ib sm" id="zoom-out">−</button>
-        <button class="ib sm" id="zoom-in">+</button>
+        <button class="tg" id="zoom-out" title="Dézoomer"><i data-i="minus"></i></button>
+        <button class="tg" id="zoom-in" title="Zoomer"><i data-i="plus"></i></button>
       </div>
       <div id="timeline">
         <div id="tl-inner">
@@ -34,47 +34,47 @@
           <div id="playhead"></div>
         </div>
         <div id="tl-empty">
-          <div class="big">🎧</div>
+          <div class="big"><i data-i="wave"></i></div>
           <p><b>Importe tes musiques</b> pour les assembler, les couper, les mixer…<br/>ou laisse l'IA créer un beat qui va avec.</p>
-          <button class="pill y" id="btn-empty-import">+ Importer des sons</button>
-          <button class="pill" id="btn-empty-beat">✨ Créer un beat de zéro</button>
+          <button class="btn primary wide" id="btn-empty-import"><i data-i="plus"></i><span>Importer des sons</span></button>
+          <button class="btn wide" id="btn-empty-beat"><i data-i="drum"></i><span>Créer un beat de zéro</span></button>
         </div>
       </div>
       <div id="clipbar" class="hidden">
         <div class="cb-title"><b id="cb-name">Clip</b><small id="cb-info"></small></div>
         <div class="cb-scroll">
-          <button data-act="split">✂️<span>Couper</span></button>
-          <button data-act="dup">⧉<span>Dupliquer</span></button>
-          <button data-act="loop">🔁<span>Boucler</span></button>
-          <button data-act="fade">◢◣<span>Fondus</span></button>
-          <button data-act="gain">🔊<span>Volume</span></button>
-          <button data-act="speed">⏩<span>Vitesse / Ton</span></button>
-          <button data-act="reverse">⇄<span>Inverser</span></button>
-          <button data-act="normalize">📈<span>Normaliser</span></button>
-          <button data-act="up">⬆<span>Piste ↑</span></button>
-          <button data-act="down">⬇<span>Piste ↓</span></button>
-          <button data-act="ai">✨<span>Ajouts IA</span></button>
-          <button data-act="del" class="danger">🗑<span>Supprimer</span></button>
+          <button data-act="split"><i data-i="cut"></i><span>Couper</span></button>
+          <button data-act="dup"><i data-i="copy"></i><span>Dupliquer</span></button>
+          <button data-act="loop"><i data-i="loop"></i><span>Boucler</span></button>
+          <button data-act="fade"><i data-i="fade"></i><span>Fondus</span></button>
+          <button data-act="gain"><i data-i="volume"></i><span>Volume</span></button>
+          <button data-act="speed"><i data-i="speed"></i><span>Vitesse</span></button>
+          <button data-act="reverse"><i data-i="reverse"></i><span>Inverser</span></button>
+          <button data-act="normalize"><i data-i="normalize"></i><span>Normaliser</span></button>
+          <button data-act="up"><i data-i="up"></i><span>Piste haut</span></button>
+          <button data-act="down"><i data-i="down"></i><span>Piste bas</span></button>
+          <button data-act="ai"><i data-i="spark"></i><span>Ajouts IA</span></button>
+          <button data-act="del" class="danger"><i data-i="trash"></i><span>Supprimer</span></button>
         </div>
       </div>
       <footer class="transport">
-        <button class="ib" id="btn-home" title="Début">⏮</button>
-        <button class="play" id="btn-play" title="Lecture">▶</button>
-        <button class="ib rec" id="btn-rec" title="Enregistrer au micro">●</button>
+        <button class="tp" id="btn-home" title="Début"><i data-i="start"></i></button>
+        <button class="tp play" id="btn-play" title="Lecture"><i data-i="play"></i></button>
+        <button class="tp rec" id="btn-rec" title="Enregistrer au micro"><i data-i="rec"></i></button>
         <div class="time"><b id="time">0:00.0</b><small id="bar">Mesure 1</small></div>
         <canvas id="vu" width="12" height="40"></canvas>
-        <button class="pill y" id="btn-import">+ Son</button>
+        <button class="btn primary" id="btn-import"><i data-i="plus"></i><span>Son</span></button>
       </footer>
     </section>
 
     <!-- ================= IA AUTO ================= -->
     <section id="ai" class="screen scroll">
-      <h2 class="h">✨ Ajouts automatiques</h2>
+      <h2 class="h">Ajouts automatiques</h2>
       <p class="sub">L'IA écoute ta musique (tempo, tonalité, accords, énergie) et crée des pistes qui vont parfaitement avec.</p>
       <div class="card">
-        <div class="row between"><h3>1 · Analyse</h3><button class="pill" id="btn-analyse">Analyser</button></div>
+        <div class="row between"><h3>1 · Analyse</h3><button class="btn" id="btn-analyse"><i data-i="wave"></i><span>Analyser</span></button></div>
         <div class="seg" id="ana-src">
-          <button data-v="mix" class="on">Tout le projet</button><button data-v="clip">Clip sélectionné</button>
+          <button data-v="mix" class="on">Tout le projet</button><button data-v="clip">Clip choisi</button>
         </div>
         <div id="ana-out" class="muted">Aucune analyse pour l'instant.</div>
         <div id="chord-grid"></div>
@@ -87,11 +87,11 @@
         <label class="sl">Intensité <input type="range" id="intensity" min="0" max="1" step="0.05" value="0.7" /></label>
         <label class="ck"><input type="checkbox" id="energy-aware" checked /> Suivre l'énergie (calme sur les couplets, fort sur les refrains, montées avant les drops)</label>
         <div class="seg" id="zone">
-          <button data-v="all" class="on">Tout le morceau</button><button data-v="from">Depuis la tête de lecture</button><button data-v="clip">Sur le clip</button>
+          <button data-v="all" class="on">Tout</button><button data-v="from">Depuis la lecture</button><button data-v="clip">Clip choisi</button>
         </div>
-        <div class="row">
-          <button class="pill y big" id="btn-generate">✨ Générer les ajouts</button>
-          <button class="pill" id="btn-vary" title="Nouvelle variation">🎲 Varier</button>
+        <div class="row nowrap">
+          <button class="btn primary grow" id="btn-generate"><i data-i="spark"></i><span>Générer les ajouts</span></button>
+          <button class="btn" id="btn-vary" title="Nouvelle variation"><i data-i="dice"></i><span>Varier</span></button>
         </div>
       </div>
       <div class="card">
@@ -101,17 +101,17 @@
           <label>Tonalité <select id="new-key"></select></label>
           <label>Mesures <input type="number" id="new-bars" value="16" min="4" max="128" step="4" /></label>
         </div>
-        <button class="pill y" id="btn-scratch">🥁 Créer le beat</button>
+        <button class="btn primary wide" id="btn-scratch"><i data-i="drum"></i><span>Créer le beat</span></button>
       </div>
       <div class="card">
         <h3>3 · Assembler &amp; transformer</h3>
         <div class="tools">
-          <button class="tool" id="btn-automix"><b>🎚 Enchaîner façon DJ</b><small>Met tous les morceaux bout à bout avec fondus enchaînés calés sur le tempo</small></button>
-          <button class="tool" id="btn-extend"><b>➕ Prolonger le morceau</b><small>Rajoute des mesures en bouclant le meilleur passage (calé sur les temps)</small></button>
-          <button class="tool" id="btn-intro"><b>🌅 Intro auto</b><small>Ajoute 4 mesures d'intro (nappe + montée) avant la musique</small></button>
-          <button class="tool" id="btn-outro"><b>🌙 Outro auto</b><small>Fondu de fin + effet de sortie</small></button>
-          <button class="tool" id="btn-master"><b>💎 Mastering auto</b><small>Égalisation, compression, limiteur : son plus fort et plus pro</small></button>
-          <button class="tool" id="btn-match"><b>🎯 Caler sur le tempo</b><small>Ajuste la vitesse de chaque morceau au BPM du projet</small></button>
+          <button class="tool" id="btn-automix"><b><i data-i="mix"></i>Enchaîner façon DJ</b><small>Met tous les morceaux bout à bout avec fondus enchaînés calés sur le tempo</small></button>
+          <button class="tool" id="btn-extend"><b><i data-i="extend"></i>Prolonger</b><small>Rajoute des mesures en bouclant le meilleur passage (calé sur les temps)</small></button>
+          <button class="tool" id="btn-intro"><b><i data-i="intro"></i>Intro auto</b><small>Ajoute 4 mesures d'intro (nappe + montée) avant la musique</small></button>
+          <button class="tool" id="btn-outro"><b><i data-i="outro"></i>Outro auto</b><small>Fondu de fin + effet de sortie</small></button>
+          <button class="tool" id="btn-master"><b><i data-i="master"></i>Mastering auto</b><small>Égalisation, compression, limiteur : son plus fort et plus pro</small></button>
+          <button class="tool" id="btn-match"><b><i data-i="target"></i>Caler sur le tempo</b><small>Ajuste la vitesse de chaque morceau au BPM du projet</small></button>
         </div>
         <label class="sl">Fondu DJ (mesures) <input type="range" id="xfade" min="1" max="16" step="1" value="4" /><output id="xfade-v">4</output></label>
         <label class="sl">Prolonger de (mesures) <input type="range" id="ext-bars" min="4" max="64" step="4" value="8" /><output id="ext-v">8</output></label>
@@ -121,27 +121,27 @@
 
     <!-- ================= VOIX IA ================= -->
     <section id="voice" class="screen scroll">
-      <h2 class="h">🎙 Voix IA</h2>
+      <h2 class="h">Voix IA</h2>
       <p class="sub">Envoie un MP3 d'une voix : l'app crée une voix identique qui dit ou chante ce que tu veux.</p>
       <div class="card">
         <div class="row between"><h3>Réglages</h3><span id="key-state" class="badge">Pas de clé</span></div>
         <p class="muted small">Le clonage utilise le moteur <b>ElevenLabs</b> (gratuit pour commencer). Crée un compte sur elevenlabs.io › <i>Developers › API Keys</i>, puis colle ta clé ici. Elle reste uniquement sur ton téléphone.</p>
-        <div class="row"><input type="password" id="xi-key" placeholder="Clé API ElevenLabs" autocomplete="off" /><button class="pill" id="btn-key">OK</button></div>
+        <div class="row"><input type="password" id="xi-key" placeholder="Clé API ElevenLabs" autocomplete="off" /><button class="btn" id="btn-key"><i data-i="check"></i><span>OK</span></button></div>
       </div>
       <div class="card">
         <h3>1 · Cloner une voix</h3>
         <input id="clone-name" placeholder="Nom de la voix (ex : Ma voix)" />
         <div class="row">
-          <button class="pill" id="btn-clone-files">📁 Choisir MP3 de la voix</button>
-          <button class="pill" id="btn-clone-rec">● Enregistrer</button>
+          <button class="btn" id="btn-clone-files"><i data-i="file"></i><span>Fichiers MP3</span></button>
+          <button class="btn" id="btn-clone-rec"><i data-i="mic"></i><span>Micro</span></button>
         </div>
         <ul id="clone-files" class="files"></ul>
         <p class="muted small">Conseil : 1 à 3 minutes de voix claire, sans musique ni bruit.</p>
         <label class="ck"><input type="checkbox" id="clone-consent" /> Je certifie que c'est ma voix ou que j'ai l'autorisation de la personne pour la cloner.</label>
-        <button class="pill y big" id="btn-clone">🧬 Créer la voix</button>
+        <button class="btn primary wide" id="btn-clone"><i data-i="clone"></i><span>Créer la voix</span></button>
       </div>
       <div class="card">
-        <div class="row between"><h3>2 · Mes voix</h3><button class="pill sm" id="btn-sync">⟳ Synchroniser</button></div>
+        <div class="row between"><h3>2 · Mes voix</h3><button class="btn sm" id="btn-sync"><i data-i="sync"></i><span>Synchroniser</span></button></div>
         <div id="voices" class="voices"></div>
       </div>
       <div class="card">
@@ -157,38 +157,38 @@
         <label class="sl">Stabilité <input type="range" id="tts-stab" min="0" max="1" step="0.05" value="0.45" /></label>
         <label class="sl">Ressemblance <input type="range" id="tts-sim" min="0" max="1" step="0.05" value="0.85" /></label>
         <label class="sl">Expressivité <input type="range" id="tts-style" min="0" max="1" step="0.05" value="0.2" /></label>
-        <button class="pill y big" id="btn-tts">🗣 Générer la voix</button>
+        <button class="btn primary wide" id="btn-tts"><i data-i="text"></i><span>Générer la voix</span></button>
       </div>
       <div class="card">
         <h3>4 · Parler / chanter avec la voix clonée</h3>
         <p class="muted small">Enregistre-toi (ou importe un fichier) : ton intonation, ton rythme et ta mélodie sont gardés, mais avec la voix clonée. Parfait pour chanter sur une musique.</p>
         <div class="row">
-          <button class="pill" id="btn-sts-rec">● S'enregistrer</button>
-          <button class="pill" id="btn-sts-file">📁 Fichier</button>
+          <button class="btn" id="btn-sts-rec"><i data-i="mic"></i><span>S'enregistrer</span></button>
+          <button class="btn" id="btn-sts-file"><i data-i="file"></i><span>Fichier</span></button>
         </div>
         <div id="sts-src" class="muted small">Aucun audio source.</div>
-        <button class="pill y big" id="btn-sts">🔄 Transformer</button>
+        <button class="btn primary wide" id="btn-sts"><i data-i="convert"></i><span>Transformer</span></button>
       </div>
       <div class="card">
         <h3>Labo voix hors-ligne</h3>
         <p class="muted small">Sans Internet : change la hauteur, imite le timbre grave/aigu d'une voix modèle, effets robot, radio, chorale…</p>
         <div class="row">
-          <button class="pill" id="btn-lab-src">📁 Voix à modifier</button>
-          <button class="pill" id="btn-lab-rec">● Micro</button>
-          <button class="pill" id="btn-lab-ref">📁 Voix modèle</button>
+          <button class="btn" id="btn-lab-src"><i data-i="file"></i><span>Voix à modifier</span></button>
+          <button class="btn" id="btn-lab-rec"><i data-i="mic"></i><span>Micro</span></button>
+          <button class="btn" id="btn-lab-ref"><i data-i="user"></i><span>Voix modèle</span></button>
         </div>
         <div id="lab-info" class="muted small">—</div>
         <label>Effet <select id="lab-fx"></select></label>
         <label class="sl">Demi-tons <input type="range" id="lab-semis" min="-12" max="12" step="1" value="0" /><output id="lab-semis-v">0</output></label>
-        <button class="pill y big" id="btn-lab">🎛 Appliquer</button>
+        <button class="btn primary wide" id="btn-lab"><i data-i="sliders"></i><span>Appliquer</span></button>
       </div>
       <div class="card" id="voice-result" hidden>
         <h3>Résultat</h3>
         <audio id="voice-audio" controls></audio>
         <div class="row wrap">
-          <button class="pill y" id="btn-v-studio">➜ Mettre dans le Studio</button>
-          <button class="pill" id="btn-v-share">Partager</button>
-          <button class="pill" id="btn-v-save">Enregistrer</button>
+          <button class="btn primary" id="btn-v-studio"><i data-i="arrow"></i><span>Dans le Studio</span></button>
+          <button class="btn" id="btn-v-share"><i data-i="share"></i><span>Partager</span></button>
+          <button class="btn" id="btn-v-save"><i data-i="download"></i><span>Enregistrer</span></button>
         </div>
       </div>
       <div class="spacer"></div>
@@ -196,8 +196,8 @@
 
     <!-- ================= PROJETS ================= -->
     <section id="projects" class="screen scroll">
-      <h2 class="h">📂 Projets</h2>
-      <button class="pill y big" id="btn-new">+ Nouveau projet</button>
+      <h2 class="h">Projets</h2>
+      <button class="btn primary wide" id="btn-new"><i data-i="plus"></i><span>Nouveau projet</span></button>
       <ul id="proj-list" class="plist"></ul>
       <p class="muted small center" id="proj-empty">Aucun projet enregistré.</p>
       <div class="studio-sign">.BEATS · by <b>Super</b><b class="y">Essence</b> Studio</div>
@@ -205,10 +205,10 @@
     </section>
 
     <nav class="tabs">
-      <button data-tab="studio" class="on"><span>🎚</span>Studio</button>
-      <button data-tab="ai"><span>✨</span>Ajouts IA</button>
-      <button data-tab="voice"><span>🎙</span>Voix IA</button>
-      <button data-tab="projects"><span>📂</span>Projets</button>
+      <button data-tab="studio" class="on"><i data-i="sliders"></i><span>Studio</span></button>
+      <button data-tab="ai"><i data-i="spark"></i><span>Ajouts IA</span></button>
+      <button data-tab="voice"><i data-i="mic"></i><span>Voix IA</span></button>
+      <button data-tab="projects"><i data-i="folder"></i><span>Projets</span></button>
     </nav>
 
     <div id="sheet-bg" class="hidden"></div>
