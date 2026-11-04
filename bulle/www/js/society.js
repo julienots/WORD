@@ -3,6 +3,8 @@ import { N, R, CX, CY, T } from './config.js';
 import { S, idx, inside, walkable, spiral, timeInfo, nearWater, randomLand } from './world.js';
 import { rnd, chance, pick, clamp, dist, range } from './util.js';
 import { makeTribeName, TRIBE_COLORS } from './names.js';
+import { assignRoles, electLeader, calendarFestival, addMyth } from './mind.js';
+import { startTrade } from './beings.js';
 
 export const TECHS = {
   feu: { name: 'Le feu', icon: '🔥', cost: 40, pre: [], desc: 'Chaleur, cuisson des aliments, lumière la nuit.' },
@@ -75,14 +77,17 @@ export function removeBuilding(b) {
 
 export function addKnowledge(tr, pts, who) {
   if (!tr) return;
-  tr.knowledge += pts * 0.3 * (has(tr, 'ecriture') ? 1.5 : 1) * (has(tr, 'langage') ? 1.15 : 1);
+  tr.knowledge += pts * 0.42 * (has(tr, 'ecriture') ? 1.5 : 1) * (has(tr, 'langage') ? 1.15 : 1);
   if (!tr.research) tr.research = nextResearch(tr);
   if (tr.research && tr.knowledge >= TECHS[tr.research].cost) {
     const id = tr.research; tr.knowledge -= TECHS[id].cost; tr.tech[id] = S.time;
     const tt = TECHS[id];
     log(`${tt.icon} ${tr.name} découvre : ${tt.name}${who ? ` (grâce à ${who.name})` : ''}.`, 'tech', true, who ? [who.x, who.y] : [tr.cx, tr.cy]);
     if (who) { who.memory.unshift(`J’ai compris ${tt.name.toLowerCase()} !`); who.emo.joy += 25; }
+    (S.sfx ||= []).push('chime');
     if (id === 'bulle') log(`🫧 ${tr.name} a compris qu’ils vivent dans une bulle. Beaucoup veulent partir.`, 'major', true);
+    if (id === 'feu') addMyth(tr, who ? `${who.name}, qui apporta le feu` : 'Le Don du Feu');
+    if (id === 'ecriture') addMyth(tr, 'Les premiers signes gravés dans la pierre');
     tr.research = nextResearch(tr);
   }
 }
@@ -105,14 +110,20 @@ export function tribesDaily() {
     const m = tr.members;
     if (!m.length) { tr.alive = false; log(`☠️ ${tr.name} a disparu.`, 'death', true); if (tr.war) endWar(tr, tribeById(tr.war.target), 'disparition'); continue; }
     // conservation
-    tr.stock.food *= has(tr, 'poterie') && S.buildings.some((b) => b.type === 'grenier' && b.tribeId === tr.id && b.done) ? 0.99 : 0.955;
+    // conservation : grenier, ou viande fumée et séchée au feu
+    tr.stock.food *= has(tr, 'poterie') && S.buildings.some((b) => b.type === 'grenier' && b.tribeId === tr.id && b.done) ? 0.99 : has(tr, 'feu') ? 0.972 : 0.955;
     if (season === 3) tr.stock.wood = Math.max(0, tr.stock.wood - m.length * 0.15 * (has(tr, 'feu') ? 1 : 0));
-    // chef
-    const adults = m.filter((b) => b.age >= 16);
-    if (!tr.leader || !m.some((b) => b.id === tr.leader)) {
-      const cand = adults.sort((a, b) => score(b) - score(a))[0];
-      if (cand) { tr.leader = cand.id; log(`👑 ${cand.name} devient chef de ${tr.name}.`, 'social'); }
-    }
+    // chef : élu par le peuple (à la mort du chef et à chaque printemps)
+    const { dayOfSeason } = timeInfo();
+    if (!tr.leader || !m.some((b) => b.id === tr.leader) || (season === 0 && dayOfSeason === 0)) electLeader(tr);
+    assignRoles(tr);
+    // prévoyance du chef : réserves avant l'hiver
+    if (season === 2 && dayOfSeason === 0) { const L = m.find((b) => b.id === tr.leader); if (L) log(`📣 ${L.name} ordonne à ${tr.name} de faire des réserves pour l’hiver.`, 'social', false, [tr.cx, tr.cy]); }
+    if (tr.stock.food < m.length * 4 && !tr.famine) { tr.famine = true; const L = m.find((b) => b.id === tr.leader); log(`🍂 Disette chez ${tr.name} : ${L ? L.name + ' envoie' : 'tous partent'} chasser, pêcher et cueillir.`, 'social', true, [tr.cx, tr.cy]); }
+    else if (tr.stock.food > m.length * 10) tr.famine = false;
+    // fêtes du calendrier
+    const fest = calendarFestival(tr);
+    if (fest) { tr.festival = { name: fest, until: S.time + 20 }; log(`🎉 ${tr.name} célèbre la ${fest} : chants et danses autour du feu.`, 'culture', false, [tr.cx, tr.cy]); for (const b of m) b.emo.joy += 15; }
     planBuildings(tr, m);
     // foi moyenne
     tr.faith = m.reduce((s, b) => s + b.faith, 0) / m.length;
@@ -217,8 +228,14 @@ function diplomacy() {
     }
     ra = clamp(ra * 0.98, -100, 100);
     a.rel[b.id] = ra; b.rel[a.id] = ra;
+    // alliances
+    const allied = ra > 60;
+    if (allied && !(a.allies ||= []).includes(b.id)) { a.allies.push(b.id); (b.allies ||= []).push(a.id); log(`🤝 Alliance : ${a.name} et ${b.name} se jurent amitié.`, 'peace', true); }
+    else if (!allied && ra < 30 && a.allies?.includes(b.id)) { a.allies = a.allies.filter((x) => x !== b.id); b.allies = (b.allies || []).filter((x) => x !== a.id); log(`💔 L’alliance entre ${a.name} et ${b.name} est rompue.`, 'social'); }
+    // commerce : échanger ses surplus
+    if (!a.war && !b.war && ra > 10 && chance(0.18 + ra * 0.004)) tryTrade(a, b);
     // guerre / paix
-    if (!a.war && !b.war && ra < -40 && S.time > a.peaceT && S.time > b.peaceT && S.time > 24 * 24 * 3 && a.members.length >= 8 && b.members.length >= 6 && chance(0.2 + agg * 0.4)) declareWar(a, b);
+    if (!a.war && !b.war && !a.allies?.includes(b.id) && ra < -40 && S.time > a.peaceT && S.time > b.peaceT && S.time > 24 * 24 * 3 && a.members.length >= 8 && b.members.length >= 6 && chance(0.2 + agg * 0.4)) declareWar(a, b);
     else if (a.war && a.war.target === b.id) {
       const days = (S.time - a.war.since) / 24;
       const weary = (a.war.losses + b.war.losses) * 0.9 + days * 0.3;
@@ -231,6 +248,8 @@ export function declareWar(a, b) {
   b.war = { target: a.id, since: S.time, kills: 0, losses: 0 };
   S.stats.wars++;
   log(`⚔️ GUERRE ! ${a.name} et ${b.name} prennent les armes.`, 'war', true, [(a.cx + b.cx) / 2, (a.cy + b.cy) / 2]);
+  a.band = b.band = null; a.nextRaid = S.time + range(4, 12); b.nextRaid = S.time + range(4, 12);
+  addMyth(a, `La guerre contre ${b.name}`); addMyth(b, `La guerre contre ${a.name}`);
   for (const p of [...a.members, ...b.members]) { p.emo.fear += 20; p.emo.anger += 25; p.memory.unshift('La guerre a commencé.'); }
 }
 export function endWar(a, b, why) {
@@ -240,6 +259,18 @@ export function endWar(a, b, why) {
     log(`🕊️ Paix signée entre ${a.name} et ${b.name}.`, 'peace', true);
     for (const p of [...a.members, ...b.members]) { p.emo.joy += 15; p.emo.fear *= 0.5; p.memory.unshift('La paix est revenue.'); }
   }
+}
+function tryTrade(a, b) {
+  const per = (t) => ({ food: t.stock.food / Math.max(1, t.members.length * 10), wood: t.stock.wood / 40, stone: t.stock.stone / 25 });
+  const [x, y] = chance(0.5) ? [a, b] : [b, a];
+  const px = per(x), py = per(y);
+  const give = Object.keys(px).sort((k1, k2) => (px[k2] - py[k2]) - (px[k1] - py[k1]))[0];
+  const want = Object.keys(px).sort((k1, k2) => (py[k2] - px[k2]) - (py[k1] - px[k1]))[0];
+  if (give === want || px[give] < 1.2 || py[want] < 1.2) return;
+  const q = Math.min(x.stock[give] * 0.2, 25), r = Math.min(y.stock[want] * 0.2, 25);
+  if (q < 4 || r < 4) return;
+  const trader = x.members.filter((m) => m.age > 17 && m.age < 60 && m.health > 60 && !m.act?.urgent && !['trade', 'fight', 'sleep'].includes(m.act?.type)).sort((p, q2) => q2.genes.soc - p.genes.soc)[0];
+  if (trader) startTrade(trader, x, y, { [give]: q }, { [want]: r });
 }
 // absorption d'une tribe trop petite par son ennemie
 export function checkConquest() {

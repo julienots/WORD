@@ -4,6 +4,7 @@ import { S, idx, inside, timeInfo, daylight, groundLvl, isNight, baseTemp } from
 import { clamp, lerp, rnd, range, mulberry32 } from './util.js';
 import { has, tribeById, BLD } from './society.js';
 import { stage, moodEmoji, byId } from './beings.js';
+import { ROLES } from './mind.js';
 
 let cv, ctx, W = 0, H = 0, DPR = 1;
 export const cam = { x: 0, y: 0, z: 0.3, tz: 0.3, tx: 0, ty: 0, follow: null, fit: 0.3, shake: 0 };
@@ -555,7 +556,9 @@ function drawBeing(b, sx, sy, z, now, labels, detail) {
   }
   const act = b.act?.type, moving = b.act?.phase === 'go';
   const sw = moving ? Math.sin(b.walk * 2.2) : 0;
-  const kneel = act === 'pray' || act === 'mourn' || act === 'gather' && b.act.phase === 'do' || act === 'farm' && b.act.phase === 'do';
+  const sit = b.sitting && b.act?.phase === 'do' && !b.act?.fest;
+  const kneel = sit || act === 'pray' || act === 'mourn' || act === 'gather' && b.act.phase === 'do' || act === 'farm' && b.act.phase === 'do';
+  const old = a > elder(b) - 4, bend = old ? 1.2 * s * b.dir : 0;
   const legH = kneel ? H * 0.18 : H * 0.36, bodyY = sy - legH;
   // jambes
   ctx.strokeStyle = skinC; ctx.lineWidth = 1.6 * s; ctx.lineCap = 'round';
@@ -584,17 +587,45 @@ function drawBeing(b, sx, sy, z, now, labels, detail) {
   else { ctx.arc(sx, hy - 0.6 * s, hr * 1.02, Math.PI * 1.02, Math.PI * 1.98); ctx.fill(); }
   if (z > 2) { ctx.fillStyle = '#1a1a1a'; ctx.fillRect(sx + b.dir * hr * 0.4 - 0.4, hy - 0.3, 0.8, 0.8); }
   if (b.health < 30) { ctx.fillStyle = 'rgba(200,0,0,0.6)'; ctx.fillRect(sx - 0.8, bodyY - bh * 0.6, 1.6, 1.6); }
+  // blessures : bandage ; anciens et boiteux : bâton
+  if (b.wounds?.length) { ctx.strokeStyle = '#f4f1ea'; ctx.lineWidth = 1.1 * s; ctx.beginPath(); const fr = b.wounds.some((w) => w.kind === 'fracture'); if (fr) { ctx.moveTo(sx - 2.2 * s, sy - legH * 0.5); ctx.lineTo(sx - 0.2 * s, sy - legH * 0.5); } else { ctx.moveTo(sx - bw, bodyY - bh * 0.5); ctx.lineTo(sx + bw, bodyY - bh * 0.4); } ctx.stroke(); if (b.wounds.some((w) => w.t < 4 && w.kind !== 'fracture')) { ctx.fillStyle = 'rgba(190,20,20,0.8)'; ctx.fillRect(sx + bw * 0.2, bodyY - bh * 0.55, 1.2 * s, 1.2 * s); } }
+  if ((old || b.flags?.limp) && !kneel) { ctx.strokeStyle = '#6b4a2c'; ctx.lineWidth = 0.9 * s; ctx.beginPath(); ctx.moveTo(sx + bw * 1.3 * b.dir, sy); ctx.lineTo(sx + bw * 1.1 * b.dir + bend * 0.3, shY + 1 * s); ctx.stroke(); }
+  if (b.singing && now < b.singing && z > 0.9) labels.push({ x: sx + 6 * s, y: hy - 4 * s - ((now / 30) % 12), text: '♪', kind: 'icon' });
   // étiquettes en espace écran
-  const icon = act === 'fight' ? '⚔️' : act === 'talk' && b.act.conv?.topic === 'amour' ? '💕' : b.disease ? '🤒' : act === 'pray' ? '🙏' : act === 'flee' ? '😱' : act === 'wall' ? '🫧' : null;
+  const icon = act === 'veillee' && b.act?.fest && z > 1.2 ? '💃' : act === 'funeral' ? '🕯️' : act === 'feed' ? '🤲' : act === 'trade' ? '🤝' : act === 'rally' ? '🚩' : act === 'fight' ? '⚔️' : act === 'talk' && b.act.conv?.topic === 'amour' ? '💕' : b.disease ? '🤒' : act === 'pray' ? '🙏' : act === 'flee' ? '😱' : act === 'wall' ? '🫧' : null;
   if (icon && z > 0.8) labels.push({ x: sx, y: hy - 7 * s, text: icon, kind: 'icon' });
   if (b.say && now < b.say.until && (z > 0.85 || sel)) labels.push({ x: sx, y: hy - 6 * s, text: b.say.text, kind: 'say', a: clamp((b.say.until - now) / 500) });
-  else if ((view.names && z > 1.9) || sel) labels.push({ x: sx, y: hy - 6 * s, text: b.name, kind: 'name', color: tr?.color });
+  else if ((view.names && z > 1.9) || sel) labels.push({ x: sx, y: hy - 6 * s, text: (b.role && ROLES[b.role] && b.age >= 16 ? ROLES[b.role].icon + ' ' : '') + b.name, kind: 'name', color: tr?.color });
 }
 const elder = (b) => 52 + b.genes.lon * 14;
 function drawAnimal(a, sx, sy, detail) {
   const sc = a.age < 0.5 ? 0.6 : 1, sw = Math.sin(a.walk * 3) * 1.4, d = a.dir;
   ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sx, sy, 5 * sc, 2 * sc, 0, 0, 7); ctx.fill();
-  if (!detail) { ctx.fillStyle = a.sp === 'wolf' ? '#666' : '#8b5a2b'; ctx.fillRect(sx - 1.5, sy - 3, 3, 2); return; }
+  if (!detail) { ctx.fillStyle = a.sp === 'wolf' ? '#666' : a.sp === 'bear' ? '#3d2a1c' : a.sp === 'boar' ? '#4a3a2e' : '#8b5a2b'; ctx.fillRect(sx - 1.5, sy - 3, a.sp === 'bear' ? 4 : 3, 2); return; }
+  if (a.hidden) ctx.globalAlpha = 0.45;
+  if (a.sp === 'boar') { // sanglier
+    ctx.strokeStyle = '#2e241c'; ctx.lineWidth = 1.2 * sc;
+    ctx.beginPath(); for (const lx of [-3, 2.5]) { ctx.moveTo(sx + lx * sc, sy - 3 * sc); ctx.lineTo(sx + lx * sc + sw * 0.6 * (lx > 0 ? 1 : -1), sy); } ctx.stroke();
+    ctx.fillStyle = a.age < 1 ? '#8a6a44' : '#4a3a2e'; ctx.beginPath(); ctx.ellipse(sx, sy - 4.5 * sc, 5.5 * sc, 3 * sc, 0, 0, 7); ctx.fill();
+    if (a.age < 1) { ctx.strokeStyle = '#d8c4a0'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(sx - 4 * sc, sy - 5 * sc); ctx.lineTo(sx + 4 * sc, sy - 5 * sc); ctx.stroke(); }
+    ctx.fillStyle = '#3a2d23'; ctx.beginPath(); ctx.moveTo(sx + 4 * sc * d, sy - 6.5 * sc); ctx.lineTo(sx + 8.5 * sc * d, sy - 4 * sc); ctx.lineTo(sx + 4 * sc * d, sy - 2.5 * sc); ctx.fill();
+    if (a.sex === 'M' && a.age > 1.5) { ctx.strokeStyle = '#efe6d2'; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(sx + 7.5 * sc * d, sy - 4 * sc); ctx.lineTo(sx + 8.5 * sc * d, sy - 6 * sc); ctx.stroke(); }
+    ctx.fillStyle = '#2a1f18'; ctx.beginPath(); ctx.moveTo(sx - 1 * sc, sy - 7.5 * sc); ctx.lineTo(sx + 3 * sc * d, sy - 7.8 * sc); ctx.lineTo(sx + 2 * sc * d, sy - 6.5 * sc); ctx.fill();
+    ctx.globalAlpha = 1; return;
+  }
+  if (a.sp === 'bear') { // ours
+    const bs = (a.age < 2 ? 0.55 : 1) * 1.25;
+    if (a.state === 'hibernate') { ctx.fillStyle = '#3d2a1c'; ctx.beginPath(); ctx.ellipse(sx, sy - 3 * bs, 7 * bs, 3.5 * bs, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '7px sans-serif'; ctx.fillText('z', sx + 5, sy - 9 - (performance.now() / 300 % 5)); return; }
+    ctx.strokeStyle = '#2b1d13'; ctx.lineWidth = 2.2 * bs;
+    ctx.beginPath(); for (const lx of [-3.5, 3.5]) { ctx.moveTo(sx + lx * bs, sy - 4 * bs); ctx.lineTo(sx + lx * bs + sw * 0.6 * (lx > 0 ? 1 : -1), sy); } ctx.stroke();
+    const g = ctx.createRadialGradient(sx - 2 * bs, sy - 8 * bs, 1, sx, sy - 6 * bs, 8 * bs); g.addColorStop(0, '#6b4a31'); g.addColorStop(1, '#3a2719');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, sy - 6 * bs, 6.5 * bs, 4.2 * bs, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + 5.5 * bs * d, sy - 8 * bs, 2.8 * bs, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + 4.2 * bs * d, sy - 10.6 * bs, 1 * bs, 0, 7); ctx.arc(sx + 6.8 * bs * d, sy - 10.4 * bs, 1 * bs, 0, 7); ctx.fill();
+    ctx.fillStyle = '#c9a57a'; ctx.beginPath(); ctx.ellipse(sx + 7.6 * bs * d, sy - 7.6 * bs, 1.3 * bs, 1 * bs, 0, 0, 7); ctx.fill();
+    if (a.state === 'attack') { ctx.fillStyle = '#fff'; ctx.font = 'bold 8px sans-serif'; ctx.fillText('!', sx + 2, sy - 16 * bs); }
+    return;
+  }
   if (a.sp === 'deer') {
     ctx.strokeStyle = '#5b3a1e'; ctx.lineWidth = 1 * sc;
     ctx.beginPath(); for (const lx of [-3, 3]) { ctx.moveTo(sx + lx * sc, sy - 5 * sc); ctx.lineTo(sx + lx * sc + sw * (lx > 0 ? 1 : -1), sy); } ctx.stroke();
@@ -607,6 +638,7 @@ function drawAnimal(a, sx, sy, detail) {
     ctx.fillStyle = '#9c8b78'; ctx.beginPath(); ctx.ellipse(sx, sy - 2 - Math.abs(sw), 2.6 * sc, 1.9 * sc, 0, 0, 7); ctx.fill();
     ctx.beginPath(); ctx.arc(sx + 2.2 * d * sc, sy - 3.4 - Math.abs(sw), 1.3 * sc, 0, 7); ctx.fill();
     ctx.fillRect(sx + 2 * d * sc, sy - 7 - Math.abs(sw), 0.8, 3); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx - 2.4 * d * sc, sy - 2.2, 0.9, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
   } else {
     ctx.strokeStyle = '#4a4a4a'; ctx.lineWidth = 1.1;
     ctx.beginPath(); for (const lx of [-3, 3]) { ctx.moveTo(sx + lx, sy - 4); ctx.lineTo(sx + lx + sw * (lx > 0 ? 1 : -1), sy); } ctx.stroke();
@@ -652,7 +684,8 @@ function drawEffects(rdt, now) {
       const g = ctx.createRadialGradient(x, y, 0, x, y, 30); g.addColorStop(0, 'rgba(255,255,220,1)'); g.addColorStop(0.3, 'rgba(255,150,40,0.9)'); g.addColorStop(1, 'rgba(255,80,0,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 30, 0, 7); ctx.fill();
       ctx.strokeStyle = 'rgba(255,170,80,0.5)'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 80, y - 60); ctx.stroke();
-    } else if (e.kind === 'ascend') { const g = ctx.createLinearGradient(0, sy - 200, 0, sy); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, `rgba(220,240,255,${e.t / 2})`); ctx.fillStyle = g; ctx.fillRect(sx - 6, sy - 200, 12, 200); }
+    } else if (e.kind === 'howl') { ctx.save(); ctx.globalAlpha = clamp(e.t / 1.5); ctx.fillStyle = '#dfe6ff'; ctx.font = 'italic 10px Georgia, serif'; ctx.fillText('Aouuuuh…', sx - 18, sy - 16 - (3 - e.t) * 6); ctx.restore(); }
+    else if (e.kind === 'ascend') { const g = ctx.createLinearGradient(0, sy - 200, 0, sy); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, `rgba(220,240,255,${e.t / 2})`); ctx.fillStyle = g; ctx.fillRect(sx - 6, sy - 200, 12, 200); }
   }
   S.effects = S.effects.filter((e) => e.t > 0);
 }
@@ -802,6 +835,10 @@ function drawPowerCursor(z) {
 // étiquettes lisibles quel que soit le zoom
 function drawLabels(labels, z, now) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  // bulles : priorité au centre de l'écran, pas de chevauchement, 7 au plus
+  const placed = []; let nSay = 0;
+  const cxs = W / 2, cys = H / 2;
+  labels.sort((p, q) => (p.kind === 'say') - (q.kind === 'say') || Math.hypot(p.x - cam.x, p.y - cam.y) - Math.hypot(q.x - cam.x, q.y - cam.y));
   for (const l of labels) {
     const sx = (l.x - cam.x) * z + W / 2, sy = (l.y - cam.y) * z + H / 2;
     if (sx < -100 || sx > W + 100 || sy < -40 || sy > H + 40) continue;
@@ -811,12 +848,19 @@ function drawLabels(labels, z, now) {
       for (const w of words) { if (ctx.measureText(cur + ' ' + w).width > 150 && cur) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; }
       lines.push(cur);
       const w = Math.max(...lines.map((s) => ctx.measureText(s).width)) + 14, h = lines.length * 15 + 8;
+      if (nSay >= 7) continue;
+      let oy = 0, ok = false;
+      for (let k = 0; k < 3 && !ok; k++) { const r = [sx - w / 2, sy - h - 8 - oy, w, h]; ok = !placed.some((p) => r[0] < p[0] + p[2] && r[0] + r[2] > p[0] && r[1] < p[1] + p[3] && r[1] + r[3] > p[1]); if (!ok) oy += h + 4; }
+      if (!ok) continue;
+      placed.push([sx - w / 2, sy - h - 8 - oy, w, h]); nSay++;
+      if (oy) { ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sx, sy - 8 - oy); ctx.lineTo(sx, sy - 4); ctx.stroke(); }
+      ctx.save(); ctx.translate(0, -oy);
       ctx.globalAlpha = l.a ?? 1;
       ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
       roundRect(sx - w / 2, sy - h - 8, w, h, 8); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(sx - 5, sy - 8.5); ctx.lineTo(sx, sy - 2); ctx.lineTo(sx + 5, sy - 8.5); ctx.fill();
       ctx.fillStyle = '#1b1b22'; lines.forEach((s, k) => ctx.fillText(s, sx, sy - h - 8 + 17 + k * 15));
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = 1; ctx.restore();
     } else if (l.kind === 'icon') { ctx.font = '14px sans-serif'; ctx.fillText(l.text, sx, sy - 2); }
     else if (l.kind === 'tribe') {
       ctx.font = '600 12px system-ui, sans-serif'; const w = ctx.measureText(l.text).width + 14;

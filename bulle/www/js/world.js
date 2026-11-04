@@ -176,7 +176,7 @@ function vegSlice(slice, slices) {
     // baies
     if (t.bush[i]) {
       if (season === 3) t.berries[i] *= 0.6;
-      else t.berries[i] = Math.min(5, t.berries[i] + 0.9 * grow * (0.5 + m));
+      else t.berries[i] = Math.min(6, t.berries[i] + 1.25 * grow * (0.5 + m));
     } else if (ty === T.GRASS && t.tree[i] === 0 && t.bld[i] < 0 && t.farm[i] < 0 && grow > 0.9 && m > 0.4 && chance(0.0015)) t.bush[i] = 1;
     // cultures
     if (t.farm[i] >= 0 && t.crop[i] > 0) {
@@ -267,6 +267,7 @@ export function freshWorldState(seed) {
     god: { energy: 60, max: 100, unlimited: false },
     stats: { births: 0, deaths: 0, wars: 0, maxPop: 0, causes: {} },
     objectives: {}, victory: null, extinct: false, dirtyTerrain: true, terrainVersion: 0,
+    history: [], fearMap: null, groupState: {},
     flags: {},
   });
   generateTerrain(seed);
@@ -288,6 +289,17 @@ export function spiral(x0, y0, maxR, pred) {
     if (best) return best;
   }
   return null;
+}
+// tous les points où l'on peut boire (recalculés quand le relief change)
+let drinkVer = -1, drinkList = [];
+export function nearestDrink(x0, y0) {
+  if (drinkVer !== S.terrainVersion || !drinkList.length) {
+    drinkVer = S.terrainVersion; drinkList = [];
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (walkable(x + 0.5, y + 0.5) && nearWater(x, y)) drinkList.push([x + 0.5, y + 0.5]);
+  }
+  let best = null, bd = 1e9;
+  for (const p of drinkList) { const d = (p[0] - x0) ** 2 + (p[1] - y0) ** 2; if (d < bd) { bd = d; best = p; } }
+  return best;
 }
 export function nearWater(x, y) {
   for (let d = 0; d < 8; d++) if (isWater(x + [1, -1, 0, 0, 1, 1, -1, -1][d], y + [0, 0, 1, -1, 1, -1, 1, -1][d])) return true;

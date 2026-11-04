@@ -4,6 +4,7 @@ import { S, idx, inside, ignite, sculpt, setWeather, walkable, randomLand } from
 import { range, chance, dist, pick, clamp } from './util.js';
 import { createBeing, infect, DISEASES, hurt, mem, say, die } from './beings.js';
 import { spawnAnimal } from './animals.js';
+import { mythsWitnessed } from './mind.js';
 import { log, tribeById, makeTribe, addRel, addKnowledge, endWar } from './society.js';
 
 export const REVELATIONS = [
@@ -29,6 +30,8 @@ export const POWERS = [
   { id: 'lower', icon: '🕳️', name: 'Creuser', cost: 4, r: 3.5, desc: 'Abaisse le terrain (lacs).' },
   { id: 'deer', icon: '🦌', name: 'Gibier', cost: 8, r: 2, desc: 'Crée un troupeau de cerfs et de lapins.' },
   { id: 'wolf', icon: '🐺', name: 'Loups', cost: 12, r: 1, desc: 'Lâche une meute de loups.' },
+  { id: 'boar', icon: '🐗', name: 'Sangliers', cost: 10, r: 1.5, desc: 'Une harde de sangliers : viande abondante, mais ils chargent.' },
+  { id: 'bear', icon: '🐻', name: 'Ours', cost: 18, r: 1, desc: 'Un ours : redoutable, il hiberne l’hiver.' },
   { id: 'human', icon: '🧍', name: 'Créer la vie', cost: 35, r: 1, desc: 'Fait naître un couple d’êtres adultes.' },
   { id: 'meteor', icon: '☄️', name: 'Météore', cost: 45, r: 4, desc: 'Une pierre tombe du dôme. Destruction.' },
   { id: 'winter', icon: '❄️', name: 'Grand froid', cost: 25, r: 0, desc: 'Plonge le monde dans le froid.' },
@@ -61,6 +64,8 @@ export function applyPower(id, x, y, extra) {
   if (id === 'voice') { if (!extra) return false; }
   if (!pay(p)) return false;
   S.stats.miracles = (S.stats.miracles || 0) + 1;
+  const MYTH = { rain: 'La Pluie qui répondit aux prières', lightning: 'Le jour où le Ciel lança sa lance de feu', fire: 'Le Feu tombé d’En-Haut', bloom: 'Le Jardin né en une nuit', bless: 'La Lumière qui guérit les mourants', plague: 'La Grande Peste envoyée par le Ciel', meteor: 'La Pierre tombée du Dôme', winter: 'L’Hiver sans fin', drought: 'La Grande Soif', human: 'Les Enfants nés de la Lumière', raise: 'Le jour où la terre se souleva', lower: 'Le jour où la terre s’ouvrit', wolf: 'Les Loups envoyés par le Ciel', bear: 'L’Ours venu de nulle part' };
+  if (MYTH[id]) mythsWitnessed(x || 36, y || 36, id === 'winter' || id === 'drought' ? 99 : 14, MYTH[id]);
   const xi = Math.floor(x), yi = Math.floor(y);
   switch (id) {
     case 'rain': {
@@ -109,8 +114,10 @@ export function applyPower(id, x, y, extra) {
     }
     case 'raise': sculpt(x, y, 3.5, 0.12); witness(x, y, 8, 0.4, 0, ['La terre bouge !', 'Tremblement !']); break;
     case 'lower': sculpt(x, y, 3.5, -0.12); witness(x, y, 8, 0.4, 0, ['La terre s’effondre !']); break;
-    case 'deer': for (let k = 0; k < 4; k++) spawnAnimal('deer', x + range(-1.5, 1.5), y + range(-1.5, 1.5), range(1, 4)); for (let k = 0; k < 4; k++) spawnAnimal('rabbit', x + range(-2, 2), y + range(-2, 2), range(0.5, 2)); log('🦌 Tu crées du gibier.', 'god', false, [x, y]); break;
-    case 'wolf': for (let k = 0; k < 4; k++) spawnAnimal('wolf', x + range(-1, 1), y + range(-1, 1), range(2, 5)).sat = 20; log('🐺 Tu lâches une meute de loups.', 'god', false, [x, y]); break;
+    case 'deer': { const gid = 'h' + S.nextId++; for (let k = 0; k < 5; k++) spawnAnimal('deer', x + range(-1.5, 1.5), y + range(-1.5, 1.5), range(1, 4), { group: gid }); for (let k = 0; k < 4; k++) spawnAnimal('rabbit', x + range(-2, 2), y + range(-2, 2), range(0.5, 2)); log('🦌 Tu crées un troupeau de cerfs et des lapins.', 'god', false, [x, y]); break; }
+    case 'boar': { const gid = 'b' + S.nextId++; for (let k = 0; k < 4; k++) spawnAnimal('boar', x + range(-1, 1), y + range(-1, 1), range(1, 5), { group: gid }); log('🐗 Tu crées une harde de sangliers.', 'god', false, [x, y]); break; }
+    case 'wolf': { const gid = 'p' + S.nextId++; for (let k = 0; k < 4; k++) spawnAnimal('wolf', x + range(-1, 1), y + range(-1, 1), range(2, 5), { group: gid, sat: 30 }); log('🐺 Tu lâches une meute de loups.', 'god', false, [x, y]); break; }
+    case 'bear': spawnAnimal('bear', x, y, range(5, 12), { sat: 40 }); log('🐻 Tu fais apparaître un ours.', 'god', false, [x, y]); break;
     case 'human': {
       if (!walkable(x, y)) { S.god.energy += p.cost; return false; }
       let tr = S.tribes.filter((t) => t.alive).sort((a, b) => dist(a.cx, a.cy, x, y) - dist(b.cx, b.cy, x, y))[0];
@@ -129,6 +136,7 @@ export function applyPower(id, x, y, extra) {
       S.voice = { text: rv.text, until: performance.now() + 5000 };
       for (const b of S.beings) { if (!b.alive || b.age < 5) continue; b.faith = Math.min(1, b.faith + 0.12); rv.effect(b); mem(b, `Une voix immense a dit : « ${rv.text} »`); if (chance(0.3)) say(b, pick(['Vous avez entendu ?!', 'C’est LUI !', 'La voix du ciel…', 'Je n’ai pas rêvé…']), 3000); }
       for (const t of S.tribes) if (t.alive) { if (rv.dogma) t.dogma = rv.dogma; if (rv.know) addKnowledge(t, rv.know); if (rv.id === 'paix' && t.war) { const e = tribeById(t.war.target); endWar(t, e, 'paix'); } if (rv.id === 'partage') for (const o of S.tribes) if (o !== t) t.rel[o.id] = (t.rel[o.id] || 0) + 25; }
+      mythsWitnessed(36, 36, 99, `La Voix qui dit : « ${rv.text.charAt(0) + rv.text.slice(1).toLowerCase()} »`);
       log(`📢 Tu parles : « ${rv.text} »`, 'god', true); break;
     }
   }

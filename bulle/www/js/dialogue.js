@@ -128,6 +128,28 @@ const TOPICS = {
   },
 };
 
+// nouveaux sujets : lieux, mythes, chasse, travail
+Object.assign(TOPICS, {
+  lieux: {
+    w: (a) => (a.know?.berries.length || 0) > 2 ? 1.6 : 0,
+    make: (a, b) => [
+      [a, pick(['J’ai trouvé des buissons pleins de baies, {place}.', 'Il y a de la bonne pierre {place}.', 'J’ai vu un troupeau de cerfs {place}.', 'Si tu as faim, va {place}, il reste des baies.'])],
+      [b, pick(['Merci, j’irai demain.', 'Je n’y serais jamais allé tout seul.', 'Garde ça pour nous deux, d’accord ?'])],
+    ], rel: 5,
+  },
+  mythe: {
+    w: (a) => (tribeById(a.tribeId)?.myths?.length ? 1.4 + a.faith : 0),
+    make: (a, b) => { const m = pick(tribeById(a.tribeId).myths).text; return [[a, `Tu connais l’histoire ? « ${m} »…`], [b, pick(['Mon grand-père me la racontait.', 'Je n’y crois qu’à moitié.', 'Raconte-la encore !', 'Les anciens disent que c’est vrai.'])]]; },
+    after: (a, b) => { b.faith = Math.min(1, b.faith + 0.02); return 4; }, know: 1,
+  },
+  chasse: {
+    w: (a) => (a.role === 'chasseur' ? 2 : 0),
+    make: (a, b) => [
+      [a, pick(['Demain on chasse le cerf, tu viens ?', 'Les bêtes nous fuient, elles ont appris à nous craindre.', 'Il faut viser les plus faibles du troupeau.', 'J’ai vu des traces d’ours. Méfie-toi.'])],
+      [b, pick(['Compte sur moi.', 'Sois prudent.', 'À plusieurs, c’est plus sûr.'])],
+    ], rel: 4, know: 1,
+  },
+});
 const LOVE = {
   make: (a, b) => [
     [a, pick(['Tu sais… je pense à toi tout le temps.', 'Quand tu es là, tout est plus doux.', 'Veux-tu partager ma vie ?', 'Tes yeux sont plus beaux que le soleil du dôme.'])],
@@ -174,6 +196,7 @@ function vars(t, s, o) {
     w: weatherInfo().label.toLowerCase(), season: SEASONS[season], temp,
     feel: temp > 22 ? 'brûlant' : temp < 4 ? 'glacial' : 'doux',
     sun: pick(['éclatant', 'pâle', 'étrange', 'bas']),
+    place: pick(['près du lac', 'vers la colline', 'au bord de la forêt', 'du côté de la Paroi', 'derrière les rochers']),
     lost: s.lostName || 'mon proche', child: child ? child.name : 'Mon petit', dpy: 24, other: o.name,
   });
 }
@@ -197,6 +220,12 @@ export function thought(b) {
   if (tr?.war) c.push([2, b.genes.agg > 0.5 ? pick(['Je vais les écraser.', 'Ils ont tué les nôtres.']) : pick(['J’ai peur de la guerre.', 'Pourvu que mes enfants survivent.'])]);
   if (b.age > 60) c.push([1.2, pick(['Je n’ai plus beaucoup de temps.', 'J’ai vu tant de saisons…', 'Qui se souviendra de moi ?'])]);
   if (b.age < 10) c.push([1.2, pick(['Je veux jouer !', 'Pourquoi le ciel est-il bleu ?', 'Maman, où es-tu ?', 'Quand je serai grand, j’irai au bout du monde.'])]);
+  if (b.wounds?.length) c.push([3, pick(['Ma blessure me lance…', 'J’ai mal, mais je tiendrai.', b.wounds.some((w) => w.kind === 'fracture') ? 'Ma jambe… je ne peux presque plus marcher.' : 'Il faut que ça cicatrise.'])]);
+  if (b.role === 'chasseur') c.push([1, pick(['Où sont passés les cerfs ?', 'Le gibier se méfie de plus en plus.', 'Il me faut une meilleure lance.'])]);
+  if (b.role === 'chaman') c.push([1, pick(['Les esprits me parlent la nuit.', 'Je dois raconter les vieilles histoires.'])]);
+  if (b.traits?.includes('traumatisé')) c.push([2, pick(['Je revois encore ce jour-là…', 'Je n’arrive plus à dormir.'])]);
+  if (tr?.famine) c.push([2.5, pick(['Les réserves sont vides…', 'Il faut que je trouve à manger pour les enfants.', 'Si l’hiver dure, nous mourrons tous.'])]);
+  if (tr?.myths?.length && b.faith > 0.3) c.push([0.8, `Les anciens racontent : « ${pick(tr.myths).text} ».`]);
   if (b.emo.joy > 70) c.push([1.5, pick(['La vie est belle.', 'Quelle belle journée.', 'Je suis heureux.'])]);
   if (b.emo.anger > 60) c.push([2, pick(['Je bous de colère.', 'Quelqu’un va payer.'])]);
   if (b.genes.cur > 0.7) c.push([1, pick(['Comment fonctionne le monde ?', 'Il faut que j’explore plus loin.', 'Pourquoi les choses tombent-elles toujours vers le sol ?'])]);

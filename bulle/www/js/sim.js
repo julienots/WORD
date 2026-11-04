@@ -3,7 +3,7 @@ import { N, R, CX, CY, T, MAX_STEP, HOURS_PER_YEAR } from './config.js';
 import { S, freshWorldState, worldStep, randomLand, nearWater, idx, walkable, timeInfo, isNight, ignite } from './world.js';
 import { Grid, range, chance, dist, rnd, pick } from './util.js';
 import { createBeing, beingStep, housing, mem, byId } from './beings.js';
-import { animalsStep, seedAnimals } from './animals.js';
+import { animalsStep, seedAnimals, fearDaily } from './animals.js';
 import { makeTribe, tribesDaily, checkConquest, log, addRel, tribeById, has, removeBuilding, addKnowledge } from './society.js';
 import { godStep } from './god.js';
 
@@ -93,11 +93,17 @@ export function simStep(dt) {
   if (day !== dayMark) { dayMark = day; daily(); }
   // statistiques & objectifs
   S.stats.maxPop = Math.max(S.stats.maxPop, S.beings.length);
-  for (const o of OBJECTIVES) if (!S.objectives[o.id] && o.test()) { S.objectives[o.id] = S.time; log(`🏆 Objectif atteint : ${o.text}`, 'goal', true); }
+  for (const o of OBJECTIVES) if (!S.objectives[o.id] && o.test()) { S.objectives[o.id] = S.time; log(`🏆 Objectif atteint : ${o.text}`, 'goal', true); (S.sfx ||= []).push('chime'); }
   if (!S.beings.length && !S.extinct && !S.victory) { S.extinct = S.time; log('☠️ Il ne reste plus personne dans la bulle.', 'death', true); }
 }
 
 function daily() {
+  fearDaily();
+  // historique pour les graphiques
+  S.history ||= [];
+  const sp = { deer: 0, rabbit: 0, wolf: 0, boar: 0, bear: 0 }; for (const a of S.animals) if (a.alive) sp[a.sp] = (sp[a.sp] || 0) + 1;
+  S.history.push({ t: S.time, pop: S.beings.length, births: S.stats.births, deaths: S.stats.deaths, tribes: Object.fromEntries(S.tribes.filter((t) => t.alive).map((t) => [t.id, t.members.length])), sp, food: Math.round(S.tribes.reduce((a, t) => a + (t.alive ? t.stock.food : 0), 0)), know: S.tribes.reduce((a, t) => Math.max(a, Object.keys(t.tech).length), 0) });
+  if (S.history.length > 4000) S.history = S.history.filter((_, i) => i % 2 === 0);
   rebuildIndex();
   tribesDaily();
   checkConquest();
@@ -136,7 +142,7 @@ export function save() {
       beings: S.beings.map((b) => ({ ...b, say: null, act: null, _last: null, path: null })), animals: S.animals.filter((a) => a.alive), tribes: S.tribes.map((t) => ({ ...t, members: [] })),
       buildings: S.buildings, log: S.log.slice(-200), nextId: S.nextId, weather: S.weather, climate: S.climate, snowCover: S.snowCover,
       fires: [...S.fires], god: S.god, stats: S.stats, objectives: S.objectives, victory: S.victory, extinct: S.extinct, flags: S.flags,
-      dead: [...S.dead.entries()].slice(-600),
+      dead: [...S.dead.entries()].slice(-600), history: S.history || [], fearMap: S.fearMap ? Array.from(S.fearMap, (v) => Math.round(v * 100) / 100) : null, groupState: S.groupState || {},
     };
     localStorage.setItem(KEY, JSON.stringify(data));
     return true;
@@ -153,7 +159,7 @@ export function load() {
     time: data.time, startTime: data.startTime ?? data.time, realTime: data.realTime || 0, beings: data.beings, animals: data.animals, tribes: data.tribes, buildings: data.buildings,
     log: data.log, nextId: data.nextId, weather: data.weather, climate: data.climate, snowCover: data.snowCover, fires: new Set(data.fires),
     god: data.god, stats: data.stats, objectives: data.objectives, victory: data.victory, extinct: data.extinct, flags: data.flags || {},
-    dead: new Map(data.dead || []), dirtyTerrain: true,
+    dead: new Map(data.dead || []), dirtyTerrain: true, history: data.history || [], fearMap: data.fearMap ? Float32Array.from(data.fearMap) : null, groupState: data.groupState || {},
   });
   S.bmap = new Map(S.buildings.map((b) => [b.id, b]));
   S.gridB = new Grid(N, 6); S.gridA = new Grid(N, 6); S.beingMap = new Map();

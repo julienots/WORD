@@ -6,7 +6,10 @@ import { initRender, render, cam, view, screenToTile, pickBeing, focusOn, clampC
 import { initUI, updateHUD, openInspector, closeInspector, openPanel, closePanel, selectPower, setSpeed, revelationModal, modal, closeModal, UI, fmtElapsed } from './ui.js';
 import { applyPower, powerById, godReal } from './god.js';
 import { byId, hurt } from './beings.js';
-import { log } from './society.js';
+import { log, tribeById } from './society.js';
+import { initAudio, audioTick, setMuted, isMuted } from './audio.js';
+import { actionText } from './ui.js';
+import { iso } from './render.js';
 
 const $ = (s) => document.querySelector(s);
 const canvas = $('#world');
@@ -20,6 +23,7 @@ function start(fresh) {
   if (S.startTime > S.time) S.startTime = S.time;
   ['#hud', '#side', '#powers', '#goalbar'].forEach((s) => $(s).classList.remove('hidden'));
   $('#intro').classList.add('hidden');
+  initAudio();
   invalidateTerrain();
   // plan d'ouverture : la bulle vue de loin, puis on s'approche
   cam.x = cam.tx = SPH.x; cam.y = cam.ty = SPH.y; cam.z = cam.fit * 0.35; cam.tz = cam.fit;
@@ -44,7 +48,10 @@ initUI({
     else if (act === 'heal') { if (S.god.unlimited || S.god.energy >= 10) { if (!S.god.unlimited) S.god.energy -= 10; b.disease = null; b.health = Math.max(b.health, 80); b.faith = Math.min(1, b.faith + 0.15); b.memory.unshift('J’ai été guéri par un miracle.'); log(`💊 Tu guéris ${b.name}.`, 'god', false, [b.x, b.y]); } }
     else if (act === 'smite') applyPower('lightning', b.x, b.y);
   },
+  isMuted: () => isMuted(),
   toggle: (k) => {
+    if (k === 'sound') { setMuted(!isMuted()); try { localStorage.setItem('labulle-mute', isMuted() ? '1' : '0'); } catch { } }
+    if (k === 'cinema') toggleCinema();
     if (k === 'unlimited') S.god.unlimited = !S.god.unlimited;
     if (k === 'names') view.names = !view.names;
     if (k === 'quality') { view.quality = view.quality === 'high' ? 'low' : 'high'; resize(); }
@@ -126,6 +133,8 @@ function frame(now) {
     godReal(rdt);
     render();
     updateHUD();
+    cinemaTick(rdt);
+    audioTick(rdt, Math.min(1, cam.z / (cam.fit * 4)), fireNearCamera());
     saveT += rdt; if (saveT > 40) { saveT = 0; save(); }
     if (S.victory && !shown.victory) { shown.victory = true; victory(); }
     if (S.extinct && !shown.extinct) { shown.extinct = true; extinction(); }
@@ -148,3 +157,57 @@ function extinction() {
     <div class="btns"><button class="btn gold" data-v="life">🧍 Recréer la vie ici</button><button class="btn" data-v="new">Nouvelle bulle</button></div>`,
   (v) => { closeModal(); if (v === 'new') start(true); else { S.extinct = false; shown.extinct = false; const gu = S.god.unlimited; S.god.unlimited = true; selectPower('human'); S.god.unlimited = gu; S.god.energy = Math.max(S.god.energy, 40); } });
 }
+
+// ---------- son : proximité d'un feu ----------
+function fireNearCamera() {
+  if (cam.z < cam.fit * 2.5) return 0;
+  const [W, H] = screenSize(); const [x, y] = screenToTile(W / 2, H / 2);
+  let best = 99;
+  for (const t of S.tribes) if (t.alive && t.tech.feu) best = Math.min(best, Math.hypot(t.cx - x, t.cy - y));
+  for (const i of S.fires) best = Math.min(best, Math.hypot((i % 72) - x, Math.floor(i / 72) - y) * 0.6);
+  return Math.max(0, 1 - best / 8);
+}
+try { if (localStorage.getItem('labulle-mute') === '1') setMuted(true); } catch { }
+
+// ---------- mode cinéma : la caméra suit les moments forts ----------
+let cineT = 0;
+function toggleCinema() {
+  UI.cinema = !UI.cinema; cineT = 0;
+  $('#btn-cine').classList.toggle('on', UI.cinema);
+  if (!UI.cinema) { cam.follow = null; $('#cine-cap').classList.add('hidden'); }
+}
+$('#btn-cine').onclick = toggleCinema;
+function interest(b) {
+  const a = b.act?.type;
+  let s = Math.random() * 1.5;
+  if (a === 'fight') s += 6; if (a === 'raid' || a === 'rally') s += 4; if (a === 'talk' && b.act.conv?.topic === 'amour') s += 5;
+  if (a === 'veillee') s += b.act.fest ? 4 : 2.5; if (a === 'funeral') s += 4; if (a === 'hunt') s += 3; if (a === 'trade') s += 3;
+  if (a === 'wall') s += 3.5; if (a === 'flee') s += 4; if (a === 'heal' || a === 'feed') s += 2.5; if (b.age < 0.1) s += 4;
+  if (b.say && performance.now() < b.say.until) s += 1.5;
+  return s;
+}
+function cinemaTick(rdt) {
+  if (!UI.cinema || !S.ready) return;
+  cineT -= rdt;
+  const cur = byId(cam.follow);
+  if (cineT <= 0 || !cur || !cur.alive) {
+    let best = null, bs = -1;
+    for (const b of S.beings) { if (!b.alive || b.inside || b.id === cam.follow && cineT > -2) continue; const s = interest(b); if (s > bs) { bs = s; best = b; } }
+    if (best) { cam.follow = best.id; cam.tz = cam.fit * (4 + Math.random() * 2.5); cineT = 9; }
+  }
+  const b = byId(cam.follow);
+  if (b) { const tr = tribeById(b.tribeId); $('#cine-cap').textContent = `🎬 ${b.name}${tr ? ' (' + tr.name + ')' : ''} — ${actionText(b)}`; $('#cine-cap').classList.remove('hidden'); }
+}
+
+// ---------- bouton retour Android ----------
+try {
+  const App = window.Capacitor?.Plugins?.App;
+  App?.addListener('backButton', () => {
+    if (!$('#modal').classList.contains('hidden')) return closeModal();
+    if (!$('#inspector').classList.contains('hidden')) return closeInspector();
+    if (!$('#panel').classList.contains('hidden')) return closePanel();
+    if (view.power) return selectPower('inspect');
+    if (UI.cinema) return toggleCinema();
+    save(); App.minimizeApp?.();
+  });
+} catch { }
