@@ -9,6 +9,7 @@ const PT_TWIPS = 20;
 
 let getSd = () => null;
 let notify = (m) => console.log(m);
+let hooks = { toggleLayout: () => {}, fitText: () => {} };
 
 /* ======================= helpers ======================= */
 const sd = () => getSd();
@@ -208,7 +209,7 @@ const PALETTE = [
   'BFBFBF', '404040', 'AEABAB', 'ADB9CA', 'B4C6E7', 'F7CBAC', 'DBDBDB', 'FFE599', 'BDD7EE', 'C5E0B3',
   'C00000', 'FF0000', 'FFCB1F', 'FFFF00', '92D050', '00B050', '00B0F0', '0070C0', '002060', '7030A0',
 ];
-function colorMenu(anchor, onPick, { none = 'Aucune' } = {}) {
+export function colorMenu(anchor, onPick, { none = 'Aucune' } = {}) {
   const items = [];
   if (none) items.push({ label: none, action: () => onPick(null) });
   items.push({
@@ -467,7 +468,7 @@ async function borderDialog() {
       for (const side of ['top', 'bottom', 'left', 'right']) {
         if (v[side]) await P.setBorder({ target, side, style: v.style, color: hex(v.color), size: Math.round(parseFloat(v.size) * 8), space: 4 });
       }
-      if (v.useFill) await P.setShading({ target, fill: hex(v.fill), val: 'clear', color: 'auto' });
+      if (v.useFill) await P.setShading({ target, fill: hex(v.fill), pattern: 'clear', color: 'auto' });
     }),
   );
 }
@@ -1230,6 +1231,7 @@ const I = {
   dropcap: '<path d="M3 4h7v9H3zM13 6h8M13 10h8M3 16h18M3 20h18"/>',
   unit: '<path d="M2 12h20M6 9v6M10 10v4M14 9v6M18 10v4"/>',
   hline: '<path d="M3 12h18" stroke-width="3"/>',
+  phone: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4M9 6h6M9 9h6M9 12h4"/>',
   blank: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M12 11v6M9 14h6"/>',
 };
 const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[name] || ''}</svg>`;
@@ -1280,7 +1282,7 @@ const TABS = {
         items: [
           { glyph: T('≡', 'font-size:22px'), label: 'Justifier', action: paraOp('setAlignment', { alignment: 'justify' }) },
           { icon: 'lines', label: 'Interligne', menu: true, action: spacingMenu },
-          { icon: 'shade', label: 'Trame', menu: true, action: (a) => colorMenu(a, (c) => (c ? paraOp('setShading', { fill: c, val: 'clear', color: 'auto' })() : paraOp('clearShading')())) },
+          { icon: 'shade', label: 'Trame', menu: true, action: (a) => colorMenu(a, (c) => (c ? paraOp('setShading', { fill: c, pattern: 'clear', color: 'auto' })() : paraOp('clearShading')())) },
           { icon: 'border', label: 'Bordures', menu: true, action: bordersMenu },
           { icon: 'tab', label: 'Tabulations', action: tabsDialog },
           { icon: 'para', label: 'Paragraphe…', action: paragraphDialog },
@@ -1450,6 +1452,7 @@ const TABS = {
         items: [
           { icon: 'book', label: 'Mode Lecture', action: () => setMode('viewing') },
           { icon: 'edit', label: 'Modification', action: () => setMode('editing') },
+          { icon: 'phone', label: 'Page / Texte', action: () => hooks.toggleLayout() },
         ],
       },
       {
@@ -1466,6 +1469,7 @@ const TABS = {
           { icon: 'zoom', label: 'Zoom', menu: true, action: zoomMenu },
           { glyph: T('100%', 'font-size:12px;font-weight:700'), label: '100 %', action: () => sd().setZoom(100) },
           { icon: 'fit', label: 'Largeur page', action: () => sd().setZoomMode('fit-width') },
+          { icon: 'phone', label: 'Largeur texte', action: () => hooks.fitText() },
         ],
       },
     ],
@@ -1496,9 +1500,10 @@ function renderGroup(g) {
   return el;
 }
 
-export function initRibbon({ getSuperdoc, toast }) {
+export function initRibbon({ getSuperdoc, toast, toggleLayout, fitText }) {
   getSd = getSuperdoc;
   notify = toast;
+  hooks = { toggleLayout: toggleLayout || hooks.toggleLayout, fitText: fitText || hooks.fitText };
   const tabsEl = document.getElementById('rb-tabs');
   const panel = document.getElementById('rb-panel');
   const extra = document.getElementById('rb-extra');
@@ -1533,3 +1538,19 @@ export function resetRibbonState() {
   document.querySelector('[data-rb="track"]')?.classList.remove('on');
   document.body.classList.remove('reading');
 }
+
+/** Actions reused by the mobile formatting bar. */
+export const ribbonActions = {
+  stylesMenu,
+  lineSpacing: (x) => paraOp('setSpacing', { line: Math.round(x * 240), lineRule: 'auto' })(),
+  insertTable,
+  pickImage,
+  insertLink,
+  insertComment,
+  footnote,
+  pageBreak,
+  pageNumbers,
+  dateDialog,
+  symbolsMenu,
+  insertToc,
+};

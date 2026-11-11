@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#000000" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <title>.WORKS</title>
@@ -49,6 +49,12 @@
         <span class="mini-logo"><span class="dot">.</span>W</span>
         <input id="doc-name" class="doc-name" spellcheck="false" value="Document1" aria-label="Nom du document" />
         <span id="save-state" class="save-state"></span>
+        <button id="btn-undo" class="icon-btn" title="Annuler" aria-label="Annuler" disabled>
+          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h11a5 5 0 0 1 0 10h-3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="btn-redo" class="icon-btn" title="Rétablir" aria-label="Rétablir" disabled>
+          <svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9a5 5 0 0 0 0 10h3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
         <button id="btn-save" class="icon-btn" title="Enregistrer" aria-label="Enregistrer">
           <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         </button>
@@ -67,9 +73,12 @@
       <main id="doc-scroll" class="doc-scroll">
         <div id="editor"></div>
       </main>
+      <!-- Mobile formatting bar (stays above the keyboard) -->
+      <div id="quickbar" class="quickbar" role="toolbar" aria-label="Mise en forme rapide"></div>
       <footer class="statusbar">
         <span id="status-left">Page 1</span>
         <span class="spacer"></span>
+        <button id="btn-layout" class="layout-btn" title="Zoom : page entière / largeur du texte">📄 Page</button>
         <button id="zoom-out" class="zoom-btn" aria-label="Zoom arrière">−</button>
         <button id="zoom-fit" class="zoom-val" title="Ajuster à la largeur">100%</button>
         <button id="zoom-in" class="zoom-btn" aria-label="Zoom avant">+</button>
@@ -80,9 +89,12 @@
     <div id="menu" class="sheet hidden" role="dialog" aria-label="Fichier">
       <div class="sheet-panel">
         <div class="sheet-handle"></div>
-        <button data-act="save"><b>Enregistrer</b><small>Dans .WORKS et dans Documents/.WORKS</small></button>
-        <button data-act="share"><b>Partager / Ouvrir dans Word</b><small>Envoie le .docx vers Word, Drive, mail…</small></button>
-        <button data-act="download"><b>Télécharger le .docx</b><small>Copie dans le dossier Téléchargements</small></button>
+        <button data-act="save"><b>Enregistrer</b><small id="menu-save-sub">Écrase le fichier d’origine quand c’est possible</small></button>
+        <button data-act="saveas"><b>Enregistrer sous…</b><small>Choisir le dossier et le nom (Téléchargements, Drive…)</small></button>
+        <button data-act="share"><b>Partager / Ouvrir dans Word</b><small>Envoie le .docx vers Word, LibreOffice, Drive, mail…</small></button>
+        <button data-act="download"><b>Copie dans Documents/.WORKS</b><small>Garde une copie .docx sur le téléphone</small></button>
+        <button data-act="layout"><b id="menu-layout">Agrandir le texte</b><small>Zoom d’affichage seulement : le fichier n’est pas modifié</small></button>
+        <button data-act="check"><b>Vérifier la compatibilité</b><small>Contrôle Word / LibreOffice du fichier enregistré</small></button>
         <button data-act="open"><b>Ouvrir un autre fichier</b><small>Importer un .docx</small></button>
         <button data-act="new"><b>Nouveau document</b><small>Document vierge</small></button>
         <button data-act="about"><b>À propos</b><small>.WORKS par SuperEssence Studio</small></button>
