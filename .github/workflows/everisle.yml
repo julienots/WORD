@@ -55,11 +55,11 @@ jobs:
         working-directory: everisle/android
         env:
           VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: 0.4.${{ github.run_number }}
+          VERSION_NAME: 0.5.${{ github.run_number }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk "../Everisle-0.4.${{ github.run_number }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "../Everisle-0.5.${{ github.run_number }}.apk"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -69,8 +69,8 @@ jobs:
       - name: Publish release (download link for the phone)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: everisle-v0.4.${{ github.run_number }}
-          name: Everisle 0.4.${{ github.run_number }}
+          tag_name: everisle-v0.5.${{ github.run_number }}
+          name: Everisle 0.5.${{ github.run_number }}
           target_commitish: ${{ github.sha }}
           files: everisle/Everisle-*.apk
           body: |

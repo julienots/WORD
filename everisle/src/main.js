@@ -2585,7 +2585,7 @@ function tick(dt, t) {
 loop();
 addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-setTimeout(() => { toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); }, 600);
+window.__onPlay = () => { audioInit(); toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); };
 setTimeout(() => { const l = $('loading'); if (l) { l.style.opacity = 0; setTimeout(() => l.remove(), 700); } }, 300);
 window._ready = true;
 window.__game = { ROADS, createSite, camera, isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };

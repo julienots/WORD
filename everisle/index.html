@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Everisle — Aperçu</title>
+<title>Everisle</title>
+<link rel="icon" href="./icon-192.png">
+<meta name="theme-color" content="#000000">
 <style>
 :root{
   --ink:#fff8ea; --ink2:#f3e3c4; --panel:rgba(32,24,16,.58); --panel2:rgba(52,38,24,.72);
@@ -11,7 +13,7 @@
   --teal:#4fe0d0; --orange:#ff9b4a; --shadow:0 .4vh 1.2vh rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#1c2414;font-family:Fredoka,"DejaVu Sans",system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Fredoka,"DejaVu Sans",system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none}
 #game{position:fixed;inset:0}
 canvas{display:block;width:100%;height:100%}
 #hud{position:fixed;inset:0;pointer-events:none;font-size:1.9vh}
@@ -181,12 +183,63 @@ html,body{touch-action:none;overscroll-behavior:none}
 .bubble.chat{font-size:2vh}
 .toast{z-index:6}
 .modal input,.modal select{pointer-events:auto;user-select:text;-webkit-user-select:text;touch-action:auto}
+#intro{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center;font-family:Fredoka,"DejaVu Sans",sans-serif;transition:background 1.2s ease,opacity .8s ease;overflow:hidden}
+#intro.out{opacity:0;pointer-events:none}
+body.intro-on #hud{opacity:0}
+#hud{transition:opacity .8s ease}
+#intro .studio{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s ease,transform .7s ease}
+#intro.stage2 .studio{opacity:0;transform:scale(1.08)}
+.se{position:relative;font-weight:700;font-size:min(13vw,15vh);letter-spacing:-.01em;line-height:1;overflow:hidden;padding:.05em .1em .12em}
+.se span{display:inline-block;opacity:0;transform:translateY(.5em) scale(.6);animation:sePop .55s cubic-bezier(.2,1.6,.4,1) forwards;text-shadow:0 .07em 0 #3a3a3a,0 .1em .18em rgba(0,0,0,.6)}
+.se .w{color:#fff}.se .y,.se .dot{color:#ffc82e}
+.se span:nth-child(1){animation-delay:.15s}.se span:nth-child(2){animation-delay:.2s}.se span:nth-child(3){animation-delay:.25s}.se span:nth-child(4){animation-delay:.3s}.se span:nth-child(5){animation-delay:.35s}
+.se span:nth-child(6){animation-delay:.48s}.se span:nth-child(7){animation-delay:.53s}.se span:nth-child(8){animation-delay:.58s}.se span:nth-child(9){animation-delay:.63s}.se span:nth-child(10){animation-delay:.68s}.se span:nth-child(11){animation-delay:.73s}.se span:nth-child(12){animation-delay:.78s}
+.se .dot{animation:dotDrop .7s cubic-bezier(.3,1.8,.5,1) .95s forwards;transform:translateY(-1.2em)}
+.se .shine{position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:shine .9s ease-in-out 1.35s forwards;mix-blend-mode:overlay}
+.studio-sub{margin-top:2.2vh;color:#bdbdbd;font-weight:500;font-size:min(2.6vw,2.8vh);letter-spacing:.6em;opacity:0;animation:fadeUp .7s ease 1.2s forwards}
+@keyframes sePop{to{opacity:1;transform:none}}
+@keyframes dotDrop{0%{opacity:0;transform:translateY(-1.2em)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes shine{to{left:120%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(1vh)}to{opacity:1;transform:none}}
+#intro .title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .9s ease .2s}
+#intro.stage2 .title{opacity:1;pointer-events:auto}
+#intro.stage2{background:radial-gradient(ellipse at center,rgba(20,14,40,.25),rgba(8,6,18,.85))}
+#intro.stage2:not(.ready){background:radial-gradient(ellipse at center,#2a1f4a,#0a0812)}
+.emblem{width:24vh;height:24vh;border-radius:5.5vh;box-shadow:0 1.2vh 4vh rgba(0,0,0,.55),0 0 0 .5vh rgba(255,255,255,.85),0 0 6vh rgba(255,190,90,.45);animation:floaty 4s ease-in-out infinite}
+@keyframes floaty{50%{transform:translateY(-1vh) rotate(-1.5deg)}}
+.wordmark{margin:2.6vh 0 0;font-size:12vh;font-weight:700;line-height:1;background:linear-gradient(180deg,#fff7d8 10%,#ffd35a 55%,#f29a2e 90%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .6vh 0 #7a3a12) drop-shadow(0 1.2vh 1.4vh rgba(0,0,0,.6));letter-spacing:.02em}
+.tagline{color:#ffe9c4;font-size:2.4vh;margin-top:1.2vh;text-shadow:0 .2vh .6vh #000}
+.lbar{width:40vh;height:1.2vh;border-radius:1vh;background:rgba(255,255,255,.15);margin-top:3.6vh;overflow:hidden;box-shadow:inset 0 0 0 .15vh rgba(255,255,255,.2)}
+.lbar i{display:block;height:100%;width:0;border-radius:1vh;background:linear-gradient(90deg,#ffb02e,#ffe08a);box-shadow:0 0 1.4vh #ffcf5a;transition:width .5s ease}
+.ltxt{color:#d8cbb4;font-size:1.8vh;margin-top:1.2vh}
+.play{display:none;margin-top:2.4vh;font-family:inherit;font-weight:700;font-size:3.4vh;color:#3a2307;padding:1.4vh 5vh;border-radius:5vh;border:.4vh solid #fff3c8;background:linear-gradient(180deg,#ffe08a,#f29a2e);box-shadow:0 .8vh 0 #a85a14,0 1.4vh 3vh rgba(0,0,0,.5);cursor:pointer;animation:pulseP 1.4s ease-in-out infinite}
+#intro.ready .play{display:block}#intro.ready .lbar,#intro.ready .ltxt{display:none}
+.play:active{transform:translateY(.5vh);box-shadow:0 .3vh 0 #a85a14}
+@keyframes pulseP{50%{transform:scale(1.05)}}
+.credit{position:absolute;bottom:3vh;color:#9a9a9a;font-size:1.7vh;letter-spacing:.1em}
+.credit b{color:#fff;font-weight:700}.credit b span{color:#ffc82e}
+@media (orientation:portrait){.emblem{width:28vw;height:28vw;border-radius:6vw}.wordmark{font-size:14vw}.lbar{width:60vw}}
 </style>
 
 </head>
 <body>
 <div id="game"></div>
-<div id="loading">Everisle…</div>
+<div id="intro">
+  <div class="studio">
+    <div class="se"><span class="w">S</span><span class="w">u</span><span class="w">p</span><span class="w">e</span><span class="w">r</span><span class="y">E</span><span class="y">s</span><span class="y">s</span><span class="y">e</span><span class="y">n</span><span class="y">c</span><span class="y">e</span><span class="dot">.</span><i class="shine"></i></div>
+    <div class="studio-sub">S T U D I O</div>
+  </div>
+  <div class="title">
+    <img class="emblem" id="emblem" alt="">
+    <h1 class="wordmark">Everisle</h1>
+    <p class="tagline">Bâtissez votre royaume insulaire à deux</p>
+    <div class="lbar"><i id="lbar-i"></i></div>
+    <p class="ltxt" id="ltxt">Chargement de l'île…</p>
+    <button class="play" id="play">▶ JOUER</button>
+    <div class="credit">un jeu <b>Super<span>Essence.</span></b> Studio</div>
+  </div>
+</div>
+
 <div id="rotate"><div>📱↻<br><br>Tourne ton téléphone en mode paysage<br>pour voir l'aperçu d'Everisle</div></div>
 
 <div id="hud">
@@ -285,6 +338,6 @@ html,body{touch-action:none;overscroll-behavior:none}
   <div class="marker" id="marker">▼</div>
 </div>
 
-<script type="module" src="/src/main.js"></script>
+<script type="module" src="/src/boot.js"></script>
 </body>
 </html>

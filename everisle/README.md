@@ -2,6 +2,10 @@
 
 Jeu mobile 3D (paysage) de construction, survie, exploration et gestion de village insulaire, pensé pour le duo.
 
+## Version 0.5
+- Écran de lancement animé SuperEssence Studio, écran titre Everisle avec chargement et bouton Jouer.
+- Nouvelle icône d'application (île au coucher du soleil) et écran de démarrage Android aux couleurs du studio.
+
 ## Version 0.4
 - **Un vrai village dès le départ** : place pavée avec fontaine, routes, puits, marché, lampadaires, bannières, panneau indicateur, trois maisons habitées autour de la place, poules et fumée des cheminées.
 - Chaque nouveau bâtiment se tourne vers la route la plus proche et y est relié automatiquement par un chemin.
