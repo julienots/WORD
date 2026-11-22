@@ -2,6 +2,13 @@
 
 Jeu mobile 3D (paysage) de construction, survie, exploration et gestion de village insulaire, pensé pour le duo.
 
+## Version 0.4
+- **Un vrai village dès le départ** : place pavée avec fontaine, routes, puits, marché, lampadaires, bannières, panneau indicateur, trois maisons habitées autour de la place, poules et fumée des cheminées.
+- Chaque nouveau bâtiment se tourne vers la route la plus proche et y est relié automatiquement par un chemin.
+- Sons et musique d'ambiance synthétisés (oiseaux le jour, grillons la nuit), effets pour chaque action.
+- Menu ⚙️ Réglages : sons, musique, qualité graphique (auto/basse/moyenne/haute), recommencer une île.
+- Qualité automatique selon la fluidité du téléphone ; les arbres deviennent transparents quand ils cachent le joueur ; étiquettes des villageois affichées seulement à proximité.
+
 ## Version 0.2
 - **Duo en ligne** (menu 💬 Duo) : un joueur héberge son île et donne un code à 5 caractères, l'autre le rejoint depuis son téléphone. Île, ressources, bâtiments, villageois, territoires et niveau partagés ; chacun garde son personnage, son niveau et sa vie. Sans duo, Lyra joue en IA.
 - **Villageois et métiers** : bûcheron, mineur, cueilleur, constructeur, fermier, menuisier, marchand, pêcheur, chasseur nocturne. Ils travaillent seuls, rapportent leurs récoltes au dépôt, gagnent des étoiles d'expérience, ont un trait de caractère, mangent chaque matin et rentrent chez eux la nuit.

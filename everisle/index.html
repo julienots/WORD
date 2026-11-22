@@ -176,6 +176,9 @@ html,body{touch-action:none;overscroll-behavior:none}
 .upbox{margin-top:1.2vh;padding:1vh;border-radius:1.2vh;background:rgba(0,0,0,.25)}
 .upbox .miss,.cost .miss{color:#ff8a7a}
 .modal,.bmenu{z-index:5}
+.setbtn{position:absolute;right:2.6vh;top:24.5vh;width:5vh;height:5vh;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;background:rgba(32,24,16,.6);border:.18vh solid var(--edge)}
+.gbtn.off{filter:grayscale(.8);opacity:.6}
+.bubble.chat{font-size:2vh}
 .toast{z-index:6}
 .modal input,.modal select{pointer-events:auto;user-select:text;-webkit-user-select:text;touch-action:auto}
 </style>
@@ -251,6 +254,7 @@ html,body{touch-action:none;overscroll-behavior:none}
 
   <div class="toast panel hidden" id="toast"></div>
 
+  <div class="setbtn tap" id="b-set">⚙️</div>
   <div class="joy tap" id="joy"><div class="knob" id="knob"></div></div>
   <div class="hint" id="hint">ZQSD (WASD) / flèches : bouger · Espace : action · B : bâtir · 1-7 : outils · molette : zoom</div>
 
