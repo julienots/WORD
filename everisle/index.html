@@ -155,6 +155,29 @@ html,body{touch-action:none;overscroll-behavior:none}
 .vrow .f{font-size:2.6vh}
 .vrow small{color:var(--ink2);display:block}
 .toast{top:auto;bottom:12.5vh}
+.tabs{grid-column:1/-1;display:flex;gap:.6vh;flex-wrap:wrap}
+.tab{padding:.5vh 1.2vh;border-radius:2vh;background:rgba(0,0,0,.3);border:.15vh solid rgba(255,230,180,.25);font-size:1.5vh}
+.tab.on{background:rgba(255,207,90,.3);border-color:var(--gold);color:#fff}
+.bmenu{max-height:62vh;overflow:auto;bottom:33vh}
+.gbtn{font-family:inherit;font-size:1.6vh;color:#3a2307;font-weight:600;background:linear-gradient(180deg,#ffe08a,#f2a93a);border:.2vh solid #fff3c8;border-radius:1.2vh;padding:.8vh 1.4vh;margin:.6vh .6vh 0 0;cursor:pointer}
+.gbtn:disabled{filter:grayscale(1);opacity:.5}
+.gbtn.red{background:linear-gradient(180deg,#ffb0a0,#e0604a);color:#2a0a05}
+.trades{display:flex;flex-wrap:wrap}
+.bigcode{font-size:5vh;letter-spacing:1.2vh;font-weight:700;color:var(--gold);text-align:center;margin:1vh 0;user-select:text;-webkit-user-select:text}
+.duo-row{display:flex;gap:1vh;align-items:center;margin:1vh 0;flex-wrap:wrap}
+.duo-row input,.jobsel{font-family:inherit;font-size:1.8vh;padding:.6vh 1vh;border-radius:1vh;border:.2vh solid var(--edge);background:rgba(0,0,0,.35);color:var(--ink)}
+#d-code{width:14vh;text-transform:uppercase;letter-spacing:.6vh;font-weight:700}
+.jobsel{font-size:1.5vh;max-width:24vh}
+.jobsel option{color:#222}
+.sub{color:var(--gold);font-size:1.6vh;text-transform:uppercase;letter-spacing:.15vh;margin:1.2vh 0 .4vh}
+.note{margin-top:1.2vh;opacity:.8;font-size:1.5vh}
+.ok{color:#9fff8a}
+.stars{color:var(--gold);font-size:1.3vh}
+.upbox{margin-top:1.2vh;padding:1vh;border-radius:1.2vh;background:rgba(0,0,0,.25)}
+.upbox .miss,.cost .miss{color:#ff8a7a}
+.modal,.bmenu{z-index:5}
+.toast{z-index:6}
+.modal input,.modal select{pointer-events:auto;user-select:text;-webkit-user-select:text;touch-action:auto}
 </style>
 
 </head>
@@ -168,14 +191,14 @@ html,body{touch-action:none;overscroll-behavior:none}
   <div id="hurt"></div>
 
   <div class="players">
-    <div class="pcard panel">
-      <div class="avatar">🧑🏻<span class="on"></span><span class="lv">14</span></div>
-      <div><div class="pname">Kael <small>Toi · Île principale</small></div>
+    <div class="pcard panel" id="p1card">
+      <div class="avatar" id="av1">🧑🏻<span class="on"></span><span class="lv" id="plv">14</span></div>
+      <div><div class="pname"><span id="p1n">Kael</span> <small>Toi</small></div>
         <div class="bar hp"><i id="hp1" style="width:100%"></i></div><div class="bar st"><i id="st1" style="width:100%"></i></div></div>
     </div>
     <div class="pcard panel p2 tap" id="p2card">
-      <div class="avatar">👩🏽<span class="on"></span><span class="lv">12</span></div>
-      <div><div class="pname">Lyra <small id="ly-s">Duo · Chasse en prairie</small></div>
+      <div class="avatar" id="av2">👩🏽<span class="on"></span><span class="lv">12</span></div>
+      <div><div class="pname"><span id="p2n">Lyra</span> <small id="ly-s">IA · Chasse en prairie</small></div>
         <div class="bar hp"><i style="width:92%"></i></div><div class="bar st"><i style="width:80%"></i></div></div>
     </div>
   </div>
@@ -194,6 +217,7 @@ html,body{touch-action:none;overscroll-behavior:none}
       <div class="pill panel"><b>🪵</b><span id="r-wood"></span></div>
       <div class="pill panel"><b>🪨</b><span id="r-stone"></span></div>
       <div class="pill panel"><b>⛓️</b><span id="r-iron"></span></div>
+      <div class="pill panel"><b>🟫</b><span id="r-plank"></span></div>
       <div class="pill panel"><b>🍒</b><span id="r-food"></span></div>
       <div class="pill panel"><b>🪙</b><span id="r-gold"></span></div>
     </div>
@@ -234,7 +258,7 @@ html,body{touch-action:none;overscroll-behavior:none}
     <div class="slot tap sel" data-i="0">⛏️<div class="dur"><i></i></div></div>
     <div class="slot tap" data-i="1">🪓</div>
     <div class="slot tap" data-i="2">🗡️</div>
-    <div class="slot tap" data-i="3">🏹<em>42</em></div>
+    <div class="slot tap" data-i="3">🏹</div>
     <div class="slot tap" data-i="4">🎣</div>
     <div class="slot tap" data-i="5">🍒<em id="food-c">0</em></div>
     <div class="slot tap" data-i="6">🧪<em>3</em></div>

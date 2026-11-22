@@ -1,7 +1,7 @@
 {
   "name": "everisle",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Everisle — construction, survie et gestion de village insulaire en duo",
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.0",
     "@fontsource/fredoka": "^5.2.0",
+    "peerjs": "^1.5.4",
     "three": "0.160.0"
   },
   "devDependencies": {
