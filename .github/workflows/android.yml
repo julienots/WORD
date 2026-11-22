@@ -30,6 +30,8 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Install & build web app
+        env:
+          VERSION_NAME: 1.1.${{ github.run_number }}
         run: |
           npm ci
           npm run build
@@ -50,11 +52,11 @@ jobs:
         working-directory: android
         env:
           VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: 1.0.${{ github.run_number }}
+          VERSION_NAME: 1.1.${{ github.run_number }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace
-          cp app/build/outputs/apk/release/app-release.apk "../WORKS-1.0.${{ github.run_number }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "../WORKS-1.1.${{ github.run_number }}.apk"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -64,8 +66,8 @@ jobs:
       - name: Publish release (download link for the phone)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: .WORKS 1.0.${{ github.run_number }}
+          tag_name: v1.1.${{ github.run_number }}
+          name: .WORKS 1.1.${{ github.run_number }}
           target_commitish: ${{ github.sha }}
           files: WORKS-*.apk
           body: |

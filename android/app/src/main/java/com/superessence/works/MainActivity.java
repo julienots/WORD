@@ -4,6 +4,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
+import android.speech.tts.TextToSpeech;
+import android.view.WindowManager;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.JavascriptInterface;
@@ -15,15 +20,19 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Locale;
 
 /**
  * .WORKS — SuperEssence Studio.
  * Adds "Open with .WORKS" support: a .docx opened/shared from another app (Files, Gmail, Drive,
  * WhatsApp…) is read here and handed untouched to the web editor through a JS interface.
+ * Also exposes native printing / "Save as PDF" (Android print framework) and text-to-speech.
  */
 public class MainActivity extends BridgeActivity {
 
     private volatile String pendingFile = null;
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,6 +103,20 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    @Override
+    public void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
+    }
+
+    private void notifyJs(String event) {
+        runOnUiThread(() -> getBridge().getWebView().evaluateJavascript(
+                "window.dispatchEvent(new Event('" + event + "'))", null));
+    }
+
     private class NativeBridge {
         /** Returns {"name","data"(base64)} once, or null when nothing is pending. */
         @JavascriptInterface
@@ -101,6 +124,85 @@ public class MainActivity extends BridgeActivity {
             String f = pendingFile;
             pendingFile = null;
             return f;
+        }
+
+        /** Opens the Android print dialog for the current page (offers "Save as PDF"). */
+        @JavascriptInterface
+        public void print(String jobName) {
+            runOnUiThread(() -> {
+                try {
+                    PrintManager pm = (PrintManager) getSystemService(PRINT_SERVICE);
+                    String name = (jobName == null || jobName.isEmpty()) ? ".WORKS" : jobName;
+                    PrintDocumentAdapter adapter = getBridge().getWebView().createPrintDocumentAdapter(name);
+                    PrintAttributes attrs = new PrintAttributes.Builder()
+                            .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                            .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                            .build();
+                    pm.print(name, adapter, attrs);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        /** Reads text aloud with the system text-to-speech engine. */
+        @JavascriptInterface
+        public void speak(String text, String lang) {
+            runOnUiThread(() -> {
+                Runnable say = () -> {
+                    try {
+                        tts.setLanguage(Locale.forLanguageTag(lang == null || lang.isEmpty() ? "fr-FR" : lang));
+                    } catch (Exception ignored) {
+                    }
+                    // TTS has a max input length: queue the text in chunks.
+                    int max = Math.max(500, TextToSpeech.getMaxSpeechInputLength() - 100);
+                    tts.stop();
+                    for (int i = 0; i < text.length(); i += max) {
+                        String part = text.substring(i, Math.min(text.length(), i + max));
+                        tts.speak(part, TextToSpeech.QUEUE_ADD, null, "works-" + i);
+                    }
+                };
+                if (tts != null && ttsReady) {
+                    say.run();
+                    return;
+                }
+                tts = new TextToSpeech(MainActivity.this, status -> {
+                    ttsReady = status == TextToSpeech.SUCCESS;
+                    if (ttsReady) {
+                        tts.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
+                            @Override public void onStart(String id) { }
+                            @Override public void onError(String id) { notifyJs("dotworks-tts-end"); }
+                            @Override public void onDone(String id) {
+                                if (!tts.isSpeaking()) notifyJs("dotworks-tts-end");
+                            }
+                        });
+                        say.run();
+                    } else {
+                        notifyJs("dotworks-tts-end");
+                    }
+                });
+            });
+        }
+
+        @JavascriptInterface
+        public void stopSpeaking() {
+            runOnUiThread(() -> {
+                if (tts != null) tts.stop();
+            });
+        }
+
+        @JavascriptInterface
+        public boolean isSpeaking() {
+            return tts != null && tts.isSpeaking();
+        }
+
+        /** Keep the screen on while editing (optional setting). */
+        @JavascriptInterface
+        public void keepScreenOn(boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
         }
     }
 }

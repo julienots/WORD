@@ -1230,6 +1230,13 @@ const I = {
   dropcap: '<path d="M3 4h7v9H3zM13 6h8M13 10h8M3 16h18M3 20h18"/>',
   unit: '<path d="M2 12h20M6 9v6M10 10v4M14 9v6M18 10v4"/>',
   hline: '<path d="M3 12h18" stroke-width="3"/>',
+  speaker: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+  navpane: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M12 8h6M12 12h6M12 16h4"/>',
+  web: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h8M8 18h5"/>',
+  focus: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  pdf: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h2a1.5 1.5 0 0 1 0 3H8v-5M8 16v2M14 12v6M14 12h1.5a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H14"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/><path d="M12 7v5l3 3"/>',
   blank: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M12 11v6M9 14h6"/>',
 };
 const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[name] || ''}</svg>`;
@@ -1471,6 +1478,14 @@ const TABS = {
     ],
   },
 };
+
+/** Lets the app add extra groups (navigation, read aloud, web layout…) to a tab before init. */
+export function addRibbonGroup(tabKey, group, { first = false } = {}) {
+  const tab = TABS[tabKey];
+  if (!tab) return;
+  if (first) tab.groups.unshift(group);
+  else tab.groups.push(group);
+}
 
 /* ======================= rendering ======================= */
 function renderGroup(g) {

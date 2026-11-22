@@ -169,3 +169,79 @@ export function closeDropdown() {
   openMenu = null;
   document.removeEventListener('mousedown', outside, true);
 }
+
+/**
+ * Bottom action sheet (mobile style).
+ * items: [{ label, hint, value, danger, html }] — resolves with the chosen value, or null.
+ */
+export function actionSheet({ title, items, cancel = 'Fermer' }) {
+  return new Promise((resolve) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'sheet';
+    const panel = document.createElement('div');
+    panel.className = 'sheet-panel';
+    panel.innerHTML = '<div class="sheet-handle"></div>';
+    if (title) {
+      const h = document.createElement('div');
+      h.className = 'sheet-title';
+      h.textContent = title;
+      panel.appendChild(h);
+    }
+    const scroll = document.createElement('div');
+    scroll.className = 'sheet-scroll';
+    panel.appendChild(scroll);
+    const close = (v) => {
+      wrap.remove();
+      resolve(v);
+    };
+    for (const it of items) {
+      if (it.separator) {
+        const hr = document.createElement('div');
+        hr.className = 'sheet-sep';
+        scroll.appendChild(hr);
+        continue;
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      if (it.danger) b.classList.add('danger');
+      if (it.html) b.innerHTML = it.html;
+      else {
+        const t = document.createElement('b');
+        t.textContent = it.label;
+        b.appendChild(t);
+        if (it.hint) {
+          const s = document.createElement('small');
+          s.textContent = it.hint;
+          b.appendChild(s);
+        }
+      }
+      b.onclick = () => close(it.value);
+      scroll.appendChild(b);
+    }
+    if (cancel) {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'muted';
+      c.textContent = cancel;
+      c.onclick = () => close(null);
+      panel.appendChild(c);
+    }
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) close(null);
+    });
+    wrap.appendChild(panel);
+    host().appendChild(wrap);
+  });
+}
+
+/** Simple confirm dialog. */
+export async function confirmDialog(title, message, ok = 'OK') {
+  const r = await formDialog({ title, fields: [{ type: 'info', value: message }], ok });
+  return !!r;
+}
+
+/** Simple one-field prompt. */
+export async function promptDialog(title, label, value = '', ok = 'OK') {
+  const r = await formDialog({ title, fields: [{ name: 'v', label, value }], ok });
+  return r ? String(r.v ?? '').trim() : null;
+}

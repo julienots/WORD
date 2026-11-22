@@ -18,6 +18,9 @@
             <p class="studio">by <b>Super</b><b class="y">Essence</b> Studio</p>
           </div>
         </div>
+        <button id="btn-settings" class="icon-btn home-gear" title="Paramètres" aria-label="Paramètres">
+          <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zm7.43-2.53a7.8 7.8 0 0 0 0-1.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.4 7.4 0 0 0-1.68-.97l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.6.24-1.17.57-1.68.97l-2.39-.96a.5.5 0 0 0-.6.22L2.84 8.81a.5.5 0 0 0 .12.64l2.03 1.58a7.8 7.8 0 0 0 0 1.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.08.73 1.68.97l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.6-.24 1.17-.57 1.68-.97l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58z"/></svg>
+        </button>
       </header>
 
       <div class="actions">
@@ -29,15 +32,25 @@
           <span class="open-ico">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M12 18v-6M9 15l3-3 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
-          <span>Ouvrir un fichier Word</span>
+          <span>Ouvrir un fichier</span>
         </button>
       </div>
 
-      <h2 class="section-title">Récents</h2>
-      <ul id="recent" class="recent"></ul>
-      <p id="recent-empty" class="empty">Aucun document pour l'instant.<br />Importe un .docx ou crée un document vierge.</p>
+      <h2 class="section-title">Modèles</h2>
+      <div id="templates" class="templates"></div>
 
-      <footer class="home-foot">.WORKS · SuperEssence Studio · Compatible Microsoft Word (.docx)</footer>
+      <div class="recent-head">
+        <h2 class="section-title">Récents</h2>
+        <button id="recent-sort" class="chip" title="Trier">Date ▾</button>
+      </div>
+      <div class="search-wrap" id="recent-search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="recent-search" type="search" placeholder="Rechercher un document" autocomplete="off" />
+      </div>
+      <ul id="recent" class="recent"></ul>
+      <p id="recent-empty" class="empty">Aucun document pour l'instant.<br />Importe un fichier Word ou crée un document.</p>
+
+      <footer class="home-foot">.WORKS <span id="app-version"></span> · SuperEssence Studio · Compatible Microsoft Word (.docx)</footer>
     </section>
 
     <!-- EDITOR -->
@@ -49,6 +62,12 @@
         <span class="mini-logo"><span class="dot">.</span>W</span>
         <input id="doc-name" class="doc-name" spellcheck="false" value="Document1" aria-label="Nom du document" />
         <span id="save-state" class="save-state"></span>
+        <button id="btn-undo" class="icon-btn" title="Annuler" aria-label="Annuler" disabled>
+          <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="btn-redo" class="icon-btn" title="Rétablir" aria-label="Rétablir" disabled>
+          <svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
         <button id="btn-save" class="icon-btn" title="Enregistrer" aria-label="Enregistrer">
           <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         </button>
@@ -64,28 +83,73 @@
         </div>
       </div>
       <div id="ruler" class="ruler-host"></div>
-      <main id="doc-scroll" class="doc-scroll">
-        <div id="editor"></div>
-      </main>
+      <div class="doc-area">
+        <aside id="nav-pane" class="nav-pane hidden" aria-label="Navigation">
+          <div class="nav-head">
+            <b>Navigation</b>
+            <button id="nav-close" class="icon-btn" aria-label="Fermer">✕</button>
+          </div>
+          <div class="nav-search">
+            <input id="nav-query" type="search" placeholder="Rechercher dans le document" autocomplete="off" />
+            <div class="nav-search-row">
+              <span id="nav-count"></span>
+              <button id="nav-prev" class="chip" aria-label="Précédent">▲</button>
+              <button id="nav-next" class="chip" aria-label="Suivant">▼</button>
+            </div>
+            <div class="nav-replace">
+              <input id="nav-replace" type="text" placeholder="Remplacer par…" autocomplete="off" />
+              <button id="nav-rep1" class="chip">Remplacer</button>
+              <button id="nav-repall" class="chip">Tout</button>
+            </div>
+          </div>
+          <div class="nav-tabs"><span>Titres</span></div>
+          <ul id="nav-outline" class="nav-outline"></ul>
+        </aside>
+        <main id="doc-scroll" class="doc-scroll">
+          <div id="editor"></div>
+        </main>
+      </div>
       <footer class="statusbar">
-        <span id="status-left">Page 1</span>
+        <button id="status-page" class="status-btn" title="Aller à la page">Page 1</button>
+        <button id="status-words" class="status-btn" title="Statistiques">0 mot</button>
         <span class="spacer"></span>
+        <button id="btn-nav" class="status-ico" title="Volet de navigation" aria-label="Volet de navigation">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button id="btn-focus" class="status-ico" title="Mode concentration" aria-label="Mode concentration">
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
         <button id="zoom-out" class="zoom-btn" aria-label="Zoom arrière">−</button>
         <button id="zoom-fit" class="zoom-val" title="Ajuster à la largeur">100%</button>
         <button id="zoom-in" class="zoom-btn" aria-label="Zoom avant">+</button>
       </footer>
+      <button id="focus-exit" class="focus-exit" aria-label="Quitter le mode concentration">
+        <svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div id="tts-bar" class="tts-bar hidden">
+        <span>🔊 Lecture à voix haute…</span>
+        <button id="tts-stop" class="chip">Arrêter</button>
+      </div>
     </section>
 
     <!-- FILE MENU -->
     <div id="menu" class="sheet hidden" role="dialog" aria-label="Fichier">
       <div class="sheet-panel">
         <div class="sheet-handle"></div>
-        <button data-act="save"><b>Enregistrer</b><small>Dans .WORKS et dans Documents/.WORKS</small></button>
-        <button data-act="share"><b>Partager / Ouvrir dans Word</b><small>Envoie le .docx vers Word, Drive, mail…</small></button>
-        <button data-act="download"><b>Télécharger le .docx</b><small>Copie dans le dossier Téléchargements</small></button>
-        <button data-act="open"><b>Ouvrir un autre fichier</b><small>Importer un .docx</small></button>
-        <button data-act="new"><b>Nouveau document</b><small>Document vierge</small></button>
-        <button data-act="about"><b>À propos</b><small>.WORKS par SuperEssence Studio</small></button>
+        <div class="sheet-scroll">
+          <button data-act="save"><b>Enregistrer</b><small>Dans .WORKS et dans Documents/.WORKS</small></button>
+          <button data-act="saveas"><b>Enregistrer une copie…</b><small>Dupliquer sous un autre nom</small></button>
+          <button data-act="share"><b>Partager / Ouvrir dans Word</b><small>Envoie le .docx vers Word, Drive, mail…</small></button>
+          <button data-act="pdf"><b>Exporter en PDF / Imprimer</b><small>Mise en page identique, toutes les pages</small></button>
+          <button data-act="export"><b>Exporter dans un autre format</b><small>Markdown, HTML, texte brut</small></button>
+          <button data-act="download"><b>Télécharger le .docx</b><small>Copie dans le dossier Téléchargements</small></button>
+          <button data-act="versions"><b>Historique des versions</b><small>Revenir à un état enregistré précédemment</small></button>
+          <button data-act="props"><b>Informations</b><small>Statistiques, taille, nombre de pages</small></button>
+          <button data-act="open"><b>Ouvrir un autre fichier</b><small>Importer un .docx, .md, .html ou .txt</small></button>
+          <button data-act="new"><b>Nouveau document</b><small>Vierge ou à partir d'un modèle</small></button>
+          <button data-act="settings"><b>Paramètres</b><small>Thème, auteur, enregistrement auto…</small></button>
+          <button data-act="about"><b>À propos</b><small>.WORKS par SuperEssence Studio</small></button>
+        </div>
         <button data-act="close" class="muted">Fermer</button>
       </div>
     </div>
@@ -93,8 +157,9 @@
     <div id="dialog-host"></div>
     <div id="toast" class="toast"></div>
     <div id="loader" class="loader hidden"><div class="spin"></div><p>Ouverture…</p></div>
+    <div id="print-host" class="print-host" aria-hidden="true"></div>
     <input id="file-input" type="file" hidden
-      accept=".docx,.docm,.dotx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+      accept=".docx,.docm,.dotx,.md,.markdown,.txt,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/html" />
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

@@ -12,6 +12,19 @@
   - **Références** : table des matières (insérer, mettre à jour, supprimer), notes de bas de page et de fin, légendes, signets, mise à jour des champs.
   - **Révision** : statistiques, commentaires, suivi des modifications, accepter / refuser, restreindre la modification.
   - **Affichage** : mode lecture, règle (en cm), marques de mise en forme, zoom, largeur de page.
+- **Nouveautés 1.1** :
+  - moteur **SuperDoc 2.34** (dernière version), Capacitor 8.6, Vite 8 ;
+  - **modèles** prêts à l'emploi : lettre, CV, rapport, compte rendu, facture ;
+  - **export PDF / impression** (mise en page identique, toutes les pages — « Enregistrer au format PDF » d'Android) ;
+  - export **Markdown, HTML, texte brut** ; import de fichiers `.md`, `.html`, `.txt` ;
+  - **historique des versions** (restaurer ou ouvrir une version précédente) ;
+  - **volet de navigation** : plan des titres, recherche, remplacer / tout remplacer ;
+  - **Mode Web** : le texte se réorganise à la largeur du téléphone ;
+  - **mode concentration**, **thème sombre**, **lecture à voix haute** (synthèse vocale Android) ;
+  - boutons **Annuler / Rétablir** permanents, compteur de mots et « Page x sur N » (toucher pour atteindre une page), zoom à deux doigts ;
+  - récents : recherche, tri, renommer, dupliquer, épingler, partager ;
+  - **paramètres** : thème, nom d'auteur, fréquence d'enregistrement auto, zoom, correcteur, écran toujours allumé ;
+  - ouverture des `.docx` **protégés par mot de passe** ; raccourcis Ctrl+S / P / F / H / G.
 - Enregistre en `.docx` natif : le fichier ré-ouvert dans Microsoft Word est identique (le moteur conserve le XML Word d'origine et ne réécrit que ce que tu as modifié).
 - Partage direct vers Word, Drive, Gmail, WhatsApp… et « Ouvrir avec .WORKS » depuis le gestionnaire de fichiers.
 - Polices métriquement compatibles embarquées (Calibri → Carlito, Cambria → Caladea, Arial → Arimo, Times New Roman → Tinos, Courier New → Cousine) pour que les lignes et les pages tombent exactement au même endroit que sur PC.
