@@ -887,7 +887,13 @@ function updateMineTag() {
 const RES_IC = { wood: '🪵', stone: '🪨', iron: '⛓️', plank: '🟫', food: '🍒', leather: '🦌', crystal: '💎', gold: '🪙', ess: '🔮' };
 const RES_NAME = { wood: 'Bois', stone: 'Pierre', iron: 'Fer', plank: 'Planches', food: 'Nourriture', leather: 'Cuir', crystal: 'Cristaux', gold: 'Pièces', ess: 'Essence d\'ombre' };
 const BUILDS = {
-  cabin: { name: 'Cabane', ic: '🏠', cat: 'Habitat', cost: { wood: 40, stone: 15 }, r: 2.6, time: 26, xp: 150, th: 6.8, lvl: 1, desc: 'Loge un habitant · améliorable', names: ['Cabane', 'Maison', 'Demeure'], up: [null, { plank: 20, stone: 30 }, { plank: 40, stone: 40, iron: 8 }], upLvl: [0, 12, 18] },
+  cabin: { name: 'Cabane', ic: '🏠', cat: 'Habitat', cost: { wood: 40, stone: 15 }, r: 2.6, time: 26, xp: 150, th: 6.8, lvl: 1, desc: 'Loge un habitant · améliorable', names: ['Cabane', 'Maison', 'Demeure'], up: [null, { plank: 20, stone: 30 }, { plank: 40, stone: 40, iron: 8 }], upLvl: [0, 12, 18], cap: 1 },
+  cottage: { name: 'Chaumière rustique', ic: '🏡', cat: 'Habitat', cost: { wood: 50, stone: 20 }, r: 2.8, time: 30, xp: 180, th: 6.6, lvl: 12, cap: 2, desc: 'Maison complète au toit de chaume · 2 habitants' },
+  nordic: { name: 'Maison nordique', ic: '🛖', cat: 'Habitat', cost: { wood: 70, stone: 15 }, r: 2.9, time: 32, xp: 200, th: 7.4, lvl: 13, cap: 2, desc: 'Rondins et toit végétal · 2 habitants' },
+  timber: { name: 'Maison à colombages', ic: '🏘️', cat: 'Habitat', cost: { wood: 60, stone: 40, plank: 10 }, r: 3.1, time: 38, xp: 260, th: 8.6, lvl: 13, cap: 3, desc: 'Style médiéval à étage · 3 habitants' },
+  tropical: { name: 'Villa tropicale', ic: '🌴', cat: 'Habitat', cost: { wood: 55, plank: 15 }, r: 3.1, time: 34, xp: 230, th: 7.6, lvl: 14, cap: 2, desc: 'Sur pilotis, toit de palmes · 2 habitants' },
+  manor: { name: 'Manoir élégant', ic: '🏛️', cat: 'Habitat', cost: { stone: 90, plank: 30, iron: 10, gold: 100 }, r: 3.7, time: 50, xp: 420, th: 9.2, lvl: 16, cap: 4, desc: 'Grande demeure en pierre · 4 habitants' },
+  magetower: { name: 'Tour enchantée', ic: '🔮', cat: 'Habitat', cost: { stone: 60, crystal: 6, ess: 5 }, r: 2.6, time: 45, xp: 380, th: 10.6, lvl: 16, cap: 2, desc: 'Style fantastique, brille la nuit · 2 habitants' },
   farm: { name: 'Ferme', ic: '🌾', cat: 'Production', cost: { wood: 35, stone: 10 }, r: 3.3, time: 24, xp: 140, th: 3.6, lvl: 12, desc: 'Le fermier cultive de la nourriture', job: 'farmer', names: ['Ferme', 'Grande ferme'], up: [null, { plank: 15, wood: 20 }], upLvl: [0, 13] },
   workshop: { name: 'Atelier', ic: '🪚', cat: 'Production', cost: { wood: 45, stone: 20, iron: 2 }, r: 2.5, time: 28, xp: 160, th: 5.8, lvl: 12, desc: 'Le menuisier transforme le bois en planches', job: 'carpenter', names: ['Atelier', 'Grand atelier'], up: [null, { plank: 20, stone: 25, iron: 4 }], upLvl: [0, 14] },
   market: { name: 'Marché', ic: '🧺', cat: 'Production', cost: { wood: 30, plank: 8, stone: 10 }, r: 2.3, time: 22, xp: 170, th: 5.2, lvl: 13, desc: 'Vends tes ressources · le marchand rapporte des pièces', job: 'merchant' },
@@ -902,12 +908,13 @@ const BUILDS = {
 };
 const ghostMat = new THREE.MeshBasicMaterial({ color: '#6dff8a', transparent: true, opacity: .42, depthWrite: false });
 const LAMP_MAT = M('#ffe2a0', { emissive: '#ffb347', emissiveIntensity: .4 });
+const CRY_MAT = new THREE.MeshStandardMaterial({ color: '#8ff0ff', emissive: '#2fb8ff', emissiveIntensity: 1.6, roughness: .2 });
 const cream = M('#e8dcc2'), redRoof = ['#a0563a', '#8e4a32', '#b0644a'].map(c => M(c)), blueRoof = ['#5f82ad', '#557aa6', '#6a8db7', '#4d6f99'].map(c => M(c, { roughness: .6 }));
-function gableRoof(parent, half, depth, mats, y0, ang = .62) {
+function gableRoof(parent, half, depth, mats, y0, ang = .62, thick = .1, gmat = cream) {
   const L = half / Math.cos(ang), rise = Math.tan(ang) * half;
-  slope(parent, L, depth, mats, 6, 7, -half / 2, y0 + rise / 2, 0, ang); slope(parent, L, depth, mats, 6, 7, half / 2, y0 + rise / 2, 0, -ang);
+  slope(parent, L, depth, mats, 6, 7, -half / 2, y0 + rise / 2, 0, ang, thick); slope(parent, L, depth, mats, 6, 7, half / 2, y0 + rise / 2, 0, -ang, thick);
   const sh = new THREE.Shape(); sh.moveTo(-half + .4, 0); sh.lineTo(half - .4, 0); sh.lineTo(0, rise - .1); sh.closePath();
-  const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: depth - .6, bevelEnabled: false }), cream); gm.position.set(0, y0, -(depth - .6) / 2); gm.castShadow = true; parent.add(gm);
+  const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: depth - .6, bevelEnabled: false }), gmat); gm.position.set(0, y0, -(depth - .6) / 2); gm.castShadow = true; parent.add(gm);
   return rise;
 }
 function makeBuild(type, ghost, level = 1) {
@@ -934,6 +941,96 @@ function makeBuild(type, ghost, level = 1) {
     gableRoof(roof, wd / 2 + .4, dp + .7, L === 3 ? blueRoof : redRoof, 0);
     box(roof, .5, 1.6, .5, stone, wd * .29, 1.2, -.6);
     if (L === 3) box(roof, .45, 1.4, .45, stone, -wd * .29, 1.1, .5);
+  } else if (type === 'cottage') {          // Chaumière rustique
+    box(found, 4.8, .45, 4.0, stone, 0, .22, 0);
+    for (let i = 0; i < 9; i++) rock(found, rr(.2, .28), -2.2 + i * .55, .32, 2.0, [1, .7, 1], 0, .3);
+    wall.position.y = .45;
+    box(wall, 4.2, 2.3, 3.4, M('#efe2c4'), 0, 1.15, 0);
+    [[-2.1, 1.7], [2.1, 1.7], [-2.1, -1.7], [2.1, -1.7]].forEach(([x, z]) => box(wall, .24, 2.4, .24, woodDark, x, 1.2, z));
+    box(wall, 4.4, .2, .2, woodDark, 0, 2.25, 1.72); box(wall, 4.4, .16, .16, woodDark, 0, 1.0, 1.72);
+    box(wall, .95, 1.55, .1, woods[0], 0, .78, 1.73); box(wall, 1.15, .14, .14, woodDark, 0, 1.6, 1.75);
+    [-1.3, 1.3].forEach(x => { box(wall, .62, .62, .08, WIN_MAT, x, 1.45, 1.73); box(wall, .2, .7, .06, M('#4f7a4a'), x - .45, 1.45, 1.76); box(wall, .2, .7, .06, M('#4f7a4a'), x + .45, 1.45, 1.76); box(wall, .8, .16, .25, woods[2], x, 1.05, 1.85); for (let k = 0; k < 4; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.08, 6, 5), M(['#ff5a7a', '#ffd24a', '#ff8a3a', '#ffffff'][k])); f.position.set(x - .27 + k * .18, 1.2, 1.88); wall.add(f); } });
+    roof.position.y = 2.75;
+    gableRoof(roof, 2.65, 4.3, ['#c9a24a', '#b8913e', '#d4ae58'].map(c => M(c, { roughness: 1 })), 0, .72, .3, M('#efe2c4'));
+    box(roof, .55, 2.0, .55, stone, 1.2, 1.4, -.7);
+  } else if (type === 'nordic') {           // Maison nordique en rondins
+    box(found, 4.9, .4, 4.3, stone, 0, .2, 0);
+    wall.position.y = .4;
+    box(wall, 4.1, 2.4, 3.5, M('#3e2a18'), 0, 1.2, 0);
+    const logM = [M('#5a3a22'), M('#6a4428'), M('#4e321e')];
+    for (let i = 0; i < 8; i++) { const y = .16 + i * .3; cyl(wall, .17, .17, 4.7, pick(logM), 0, y, 1.85, 0, 0, Math.PI / 2, 8); cyl(wall, .17, .17, 4.7, pick(logM), 0, y, -1.85, 0, 0, Math.PI / 2, 8); cyl(wall, .17, .17, 4.0, pick(logM), 2.15, y + .15, 0, Math.PI / 2, 0, 0, 8); cyl(wall, .17, .17, 4.0, pick(logM), -2.15, y + .15, 0, Math.PI / 2, 0, 0, 8); }
+    box(wall, .95, 1.7, .12, woods[1], 0, .85, 2.04); box(wall, 1.2, .16, .2, woodDark, 0, 1.78, 2.06);
+    [-1.3, 1.3].forEach(x => { box(wall, .6, .55, .1, WIN_MAT, x, 1.5, 2.04); box(wall, .78, .1, .16, woodLight, x, 1.2, 2.08); });
+    [-.9, .9].forEach(x => cyl(wall, .1, .1, 2.4, woods[2], x, 1.2, 2.9));
+    box(wall, 2.2, .1, 1.2, pick(woods), 0, .05, 2.5);
+    roof.position.y = 2.75;
+    const rise = gableRoof(roof, 2.7, 4.9, ['#4f7a2a', '#5f8a32', '#3f6a22'].map(c => M(c, { roughness: 1 })), 0, .85, .25, M('#4e321e'));
+    box(roof, .16, 1.5, .16, woodLight, -.35, rise + .35, 2.5, 0, 0, .55); box(roof, .16, 1.5, .16, woodLight, .35, rise + .35, 2.5, 0, 0, -.55);
+    plankRoof(roof, 1.6, 2.4, 6, 0, -.2, 2.65, 0, .35).rotation.set(.35, Math.PI / 2, 0);
+    box(roof, .6, 2.2, .6, stone, -1.2, 1.6, -.8);
+  } else if (type === 'timber') {           // Maison à colombages (médiévale)
+    box(found, 5.0, .4, 4.2, stone, 0, .2, 0);
+    wall.position.y = .4;
+    box(wall, 4.6, 1.7, 3.8, stoneLight, 0, .85, 0);
+    box(wall, 5.0, 2.0, 4.2, cream, 0, 2.7, 0);
+    box(wall, 5.1, .16, 4.3, woodDark, 0, 1.75, 0); box(wall, 5.1, .16, 4.3, woodDark, 0, 3.65, 0);
+    [-2.45, -1.2, 0, 1.2, 2.45].forEach(x => box(wall, .14, 2.0, .06, woodDark, x, 2.7, 2.12));
+    [-1.85, -.6, .6, 1.85].forEach((x, i) => box(wall, .11, 1.95, .05, woodDark, x, 2.7, 2.13, 0, 0, i % 2 ? .52 : -.52));
+    [-2.0, -.7, .7, 2.0].forEach(z => { box(wall, .06, 2.0, .14, woodDark, 2.52, 2.7, z); box(wall, .06, 2.0, .14, woodDark, -2.52, 2.7, z); });
+    box(wall, 1.0, 1.5, .1, woods[0], 0, .75, 1.92); box(wall, 1.25, .2, .2, stone, 0, 1.6, 1.95);
+    [-1.5, 1.5].forEach(x => { box(wall, .6, .6, .08, WIN_MAT, x, .95, 1.92); box(wall, .76, .12, .14, stone, x, .6, 1.96); });
+    [-1.8, 0, 1.8].forEach(x => { box(wall, .62, .72, .08, WIN_MAT, x, 2.75, 2.12); box(wall, .78, .1, .16, woodLight, x, 2.33, 2.16); });
+    roof.position.y = 4.1;
+    gableRoof(roof, 2.95, 4.9, redRoof, 0, .8, .12);
+    box(roof, .9, .85, .9, cream, 0, 1.0, 1.25); box(roof, .5, .45, .06, WIN_MAT, 0, 1.0, 1.71);
+    plankRoof(roof, .8, 1.1, 4, -.3, 1.55, 1.25, .7); plankRoof(roof, .8, 1.1, 4, .3, 1.55, 1.25, -.7);
+    box(roof, .6, 2.4, .6, stone, 1.6, 1.6, -1.0);
+  } else if (type === 'tropical') {         // Villa tropicale sur pilotis
+    [[-2.2, -1.9], [0, -1.9], [2.2, -1.9], [-2.2, 1.9], [0, 1.9], [2.2, 1.9]].forEach(([x, z]) => cyl(found, .13, .15, 1.35, woodLight, x, .67, z));
+    for (let i = 0; i < 12; i++) box(found, .42, .12, 4.6, pick(woods), -2.35 + i * .43, 1.38, 0);
+    for (let i = 0; i < 4; i++) box(found, 1.1, .1, .32, woods[2], 0, .25 + i * .33, 3.25 - i * .3);
+    wall.position.y = 1.44;
+    box(wall, 3.8, 2.1, 3.2, M('#cfae70'), 0, 1.05, -.2);
+    for (let x = -1.85; x <= 1.86; x += .31) { box(wall, .27, 2.1, .08, pick([M('#d8b878'), M('#c8a868')]), x, 1.05, 1.42); box(wall, .27, 2.1, .08, pick([M('#d8b878'), M('#c8a868')]), x, 1.05, -1.82); }
+    box(wall, .9, 1.7, .06, black, 0, .85, 1.47);
+    [-1.2, 1.2].forEach(x => box(wall, .7, .6, .06, WIN_MAT, x, 1.25, 1.48));
+    for (let k = 0; k < 9; k++) box(wall, .07, .55, .07, woodDark, -2.3 + k * .575, .28, 2.2);
+    box(wall, 4.7, .08, .1, woodLight, 0, .56, 2.2);
+    roof.position.y = 3.55;
+    gableRoof(roof, 3.1, 5.6, ['#6a9a32', '#5a8a2a', '#c8b060', '#b8a050'].map(c => M(c, { roughness: 1, side: THREE.DoubleSide })), 0, .5, .2, M('#c8a868'));
+    for (let k = 0; k < 9; k++) { const lf = new THREE.Mesh(new THREE.ConeGeometry(.22, .7, 4), M('#5a8a2a')); lf.position.set(-2.8 + k * .7, -.15, 2.85); lf.rotation.x = Math.PI; roof.add(lf); }
+  } else if (type === 'manor') {            // Manoir élégant
+    box(found, 6.4, .5, 5.2, stoneLight, 0, .25, 0);
+    box(found, 2.2, .25, .7, stoneLight, 0, .12, 2.9); box(found, 1.8, .2, .5, stoneLight, 0, .35, 2.75);
+    wall.position.y = .5;
+    const white = M('#f2ede2');
+    box(wall, 5.8, 4.0, 4.6, white, 0, 2.0, 0);
+    for (let y = 0; y < 8; y++) [[-2.9, 2.3], [2.9, 2.3], [-2.9, -2.3], [2.9, -2.3]].forEach(([x, z]) => box(wall, y % 2 ? .4 : .55, .48, y % 2 ? .55 : .4, stone, x, .25 + y * .5, z));
+    box(wall, 6.0, .18, 4.8, stone, 0, 2.05, 0); box(wall, 6.1, .25, 4.9, stone, 0, 3.95, 0);
+    const shut = M('#4a6a9a');
+    [[-1.9, 1.1], [1.9, 1.1], [-1.9, 3.0], [0, 3.0], [1.9, 3.0]].forEach(([x, y]) => { box(wall, .75, 1.05, .08, WIN_MAT, x, y, 2.32); box(wall, .95, .14, .14, stoneLight, x, y + .62, 2.35); box(wall, .22, 1.05, .06, shut, x - .5, y, 2.34); box(wall, .22, 1.05, .06, shut, x + .5, y, 2.34); });
+    box(wall, 1.0, 1.8, .1, M('#3a4a6a'), 0, .9, 2.33);
+    [-.85, .85].forEach(x => cyl(wall, .13, .15, 2.2, stoneLight, x, 1.1, 2.65, 0, 0, 0, 10));
+    const ped = new THREE.Shape(); ped.moveTo(-1.15, 0); ped.lineTo(1.15, 0); ped.lineTo(0, .6); ped.closePath();
+    const pm = new THREE.Mesh(new THREE.ExtrudeGeometry(ped, { depth: .6, bevelEnabled: false }), stoneLight); pm.position.set(0, 2.2, 2.35); pm.castShadow = true; wall.add(pm);
+    roof.position.y = 4.5;
+    gableRoof(roof, 3.3, 5.3, blueRoof, 0, .6, .12, white);
+    [-1.9, 1.9].forEach(x => box(roof, .55, 2.0, .55, stoneLight, x, 1.3, -.4));
+    const ow = new THREE.Mesh(new THREE.CircleGeometry(.3, 16), WIN_MAT); ow.position.set(0, .9, 2.36); roof.add(ow);
+  } else if (type === 'magetower') {        // Tour fantastique
+    cyl(found, 2.1, 2.3, .4, stone, 0, .2, 0, 0, 0, 0, 20);
+    wall.position.y = .4;
+    cyl(wall, 1.6, 1.8, 5.2, M('#9a98a8'), 0, 2.6, 0, 0, 0, 0, 20);
+    [1.0, 2.6, 4.2].forEach((y, i) => cyl(wall, 1.82 - i * .08, 1.82 - i * .08, .2, stone, 0, y, 0, 0, 0, 0, 20));
+    for (let k = 0; k < 4; k++) [2.0, 3.6].forEach(y => { const a = k * Math.PI / 2 + .4; const w = box(wall, .38, .75, .1, CRY_MAT, Math.sin(a) * 1.7, y, Math.cos(a) * 1.7); w.rotation.y = a; });
+    box(wall, .85, 1.5, .14, woods[1], 0, .75, 1.76);
+    cyl(wall, .8, .85, 2.4, M('#8a889a'), 1.9, 1.2, -.7, 0, 0, 0, 14);
+    const ac = new THREE.Mesh(new THREE.ConeGeometry(1.0, 1.4, 14), M('#5a3a8a')); ac.position.set(1.9, 3.1, -.7); ac.castShadow = true; wall.add(ac);
+    roof.position.y = 5.6;
+    cyl(roof, 2.0, 2.0, .22, stone, 0, .1, 0, 0, 0, 0, 20);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(2.3, 3.4, 20), M('#5a3a8a', { roughness: .6 })); cone.position.y = 1.9; cone.castShadow = true; roof.add(cone);
+    cyl(roof, .05, .05, 1.0, M('#d8c070', { metalness: .7 }), 0, 4.0, 0);
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 12), CRY_MAT); orb.position.y = 4.6; roof.add(orb);
   } else if (type === 'farm') {
     box(found, 6.2, .1, 4.4, M('#6b4a2a'), 0, .05, 0);
     for (let i = 0; i < 6; i++) box(found, 5.6, .1, .28, M('#5a3a20'), 0, .1, -1.75 + i * .7);
@@ -1028,7 +1125,7 @@ const siteR = (type, level) => type === 'cabin' ? [2.6, 2.95, 3.0][level - 1] : 
 const bName = s => (s.def.names ? s.def.names[s.level - 1] : s.def.name);
 let siteSeq = 1;
 function addScaffold(s) {
-  const h = { cabin: s.level > 1 ? 6 : 4.8, wall: 2.6, stonewall: 2.6, tower: 5.6, farm: 1.5, workshop: 4, market: 3.6 }[s.type]; if (!h) return;
+  const h = { cottage: 4.8, nordic: 5.6, timber: 6.6, tropical: 5.8, manor: 7.6, magetower: 9.2, cabin: s.level > 1 ? 6 : 4.8, wall: 2.6, stonewall: 2.6, tower: 5.6, farm: 1.5, workshop: 4, market: 3.6 }[s.type]; if (!h) return;
   const sc2 = new THREE.Group(), R = s.r * .82, k = (s.type === 'wall' || s.type === 'stonewall') ? .35 : 1; s.g.add(sc2); s.scaf = sc2;
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => cyl(sc2, .05, .05, h, woodLight, a * R, h / 2, b * R * k));
   for (let y = 1.2; y < h; y += 1.4) { box(sc2, R * 2, .06, .06, woodLight, 0, y, R * k); box(sc2, .06, .06, R * 2 * k, woodLight, R, y, 0); }
@@ -1081,7 +1178,7 @@ function finishSite(s, silent) {
   S.bld++; addXP(s.def.xp); S.builds.push({ id: s.id, type: s.type, x: s.x, z: s.z, ry: s.ry, level: 1 });
   if (s.def.time > 0) floatText(`+${s.def.xp} XP`, V(s.x, H(s.x, s.z) + 3, s.z), '#9fe8ff');
   if (s.type === 'farm') S.stats.farms++;
-  if (s.type === 'cabin') { S.stats.cabins++; newResident(s); }
+  if (s.def.cap) { S.stats.cabins++; for (let i = 0; i < s.def.cap; i++) newResident(s); }
   else if (s.def.time > 0) worldToast(s.def.ic, `${s.def.name} terminé(e) !`, s.def.job ? `Assigne un ${JOBS[s.def.job].n.toLowerCase()} dans le menu Village` : `+${s.def.xp} XP pour l'île`);
   netEvent({ t: 'site', s: siteNet(s) });
   checkQuests(); save();
@@ -1677,7 +1774,7 @@ const QUESTS = [
   { id: 'wood', ic: '🪓', txt: 'Couper du bois', goal: 20, key: 'woodCut', xp: 80, gold: 50 },
   { id: 'berry', ic: '🍒', txt: 'Cueillir des baies', goal: 4, key: 'berries', xp: 40, gold: 20 },
   { id: 'stone', ic: '⛏️', txt: 'Miner de la pierre', goal: 16, key: 'stoneMined', xp: 80, gold: 50 },
-  { id: 'cabin', ic: '🏠', txt: 'Faire bâtir une cabane', goal: 1, key: 'cabins', xp: 150, gold: 80 },
+  { id: 'cabin', ic: '🏠', txt: 'Faire bâtir une maison', goal: 1, key: 'cabins', xp: 150, gold: 80 },
   { id: 'farm', ic: '🌾', txt: 'Construire une ferme', goal: 1, key: 'farms', xp: 150, gold: 80 },
   { id: 'mine', ic: '🏗️', txt: 'Améliorer la mine (livrer 🪨)', goal: 34, key: 'mineDeliver', xp: 200, gold: 120 },
   { id: 'deer', ic: '🦌', txt: 'Chasser 3 cerfs (en duo)', goal: 3, key: 'deer', xp: 120, gold: 60 },
@@ -1783,9 +1880,9 @@ function openBuilding(s) {
   modalRefresh = () => openBuilding(s);
   const L = s.level, next = s.def.up && s.def.up[L], nlvl = next ? s.def.upLvl[L] : 0;
   const workers = s.def.job ? RESIDENTS.filter(r => r.rec.job === s.def.job) : [];
-  const residents = s.type === 'cabin' ? RESIDENTS.filter(r => r.rec.homeId === s.id) : [];
+  const residents = s.def.cap ? RESIDENTS.filter(r => r.rec.homeId === s.id) : [];
   let html = `<p>${s.def.desc}</p>`;
-  if (s.type === 'cabin') html += `<p class="note">Habitants : ${residents.map(r => esc(r.rec.name)).join(', ') || 'aucun'} · capacité ${L}</p>`;
+  if (s.def.cap) html += `<p class="note">Habitants : ${residents.map(r => esc(r.rec.name)).join(', ') || 'aucun'} · capacité ${s.type === 'cabin' ? L : s.def.cap}</p>`;
   if (s.def.job) html += `<p class="note">${JOBS[s.def.job].ic} ${JOBS[s.def.job].n}s : ${workers.map(r => esc(r.rec.name)).join(', ') || 'aucun — assigne-en un dans le menu Village'}</p>`;
   if (s.type === 'market') html += marketHtml();
   if (next) html += `<div class="upbox"><b>Améliorer en ${s.def.names[L]}</b><br><span class="cost">${Object.entries(next).map(([r, v]) => `<span class="${S[r] < v ? 'miss' : ''}">${RES_IC[r]} ${v}</span>`).join(' ')}</span>${S.lvl < nlvl ? ` <span class="miss">🔒 Île Niv. ${nlvl}</span>` : ''}<br><button class="gbtn tap" id="bt-up" ${s.upg ? 'disabled' : ''}>${s.upg ? 'Amélioration en cours…' : '✨ Améliorer'}</button></div>`;
@@ -2201,6 +2298,6 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 setTimeout(() => { toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); }, 600);
 setTimeout(() => { const l = $('loading'); if (l) { l.style.opacity = 0; setTimeout(() => l.remove(), 700); } }, 300);
 window._ready = true;
-window.__game = { isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };
+window.__game = { createSite, camera, isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };
 
 initNative();
