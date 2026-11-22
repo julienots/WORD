@@ -3,6 +3,7 @@ name: Build .WORKS APK
 on:
   push:
     branches: ['**']
+    paths-ignore: ['everisle/**', '.github/workflows/everisle.yml']
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Everisle</string>
+    <string name="title_activity_main">Everisle</string>
+    <string name="package_name">com.superessence.everisle</string>
+    <string name="custom_url_scheme">com.superessence.everisle</string>
+</resources>

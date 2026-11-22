@@ -1,0 +1,78 @@
+name: Build Everisle APK
+
+on:
+  push:
+    branches: ['**']
+    paths: ['everisle/**', '.github/workflows/everisle.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: everisle
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: everisle/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Android SDK (preinstalled on the runner)
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Install & build game
+        run: |
+          npm ci
+          npm run build
+          npx cap sync android
+
+      - name: Optional private signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.EVERISLE_KEYSTORE_BASE64 }}
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=${{ secrets.EVERISLE_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=${{ secrets.EVERISLE_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${{ secrets.EVERISLE_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build signed APK
+        working-directory: everisle/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 0.1.${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk "../Everisle-0.1.${{ github.run_number }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Everisle-apk
+          path: everisle/Everisle-*.apk
+
+      - name: Publish release (download link for the phone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: everisle-v0.1.${{ github.run_number }}
+          name: Everisle 0.1.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          files: everisle/Everisle-*.apk
+          body: |
+            **Everisle** — construction, survie et village insulaire en duo.
+            Télécharge le fichier `.apk` ci-dessous sur ton téléphone Android et installe-le (mode paysage).
