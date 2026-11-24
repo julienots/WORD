@@ -2780,7 +2780,7 @@ function tick(dt, t) {
 loop();
 addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-window.__onPlay = () => { audioInit(); setTimeout(checkDaily, 1400); toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); };
+window.__onPlay = () => { audioInit(); setTimeout(() => banner('Everisle', 'Bâtissez votre royaume insulaire à deux', `<img src="${window.__icon || ''}" style="height:11vh;border-radius:2.6vh;box-shadow:0 .8vh 2vh rgba(0,0,0,.5)">`), 500); setTimeout(checkDaily, 3600); toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); };
 setTimeout(() => { const l = $('loading'); if (l) { l.style.opacity = 0; setTimeout(() => l.remove(), 700); } }, 300);
 window._ready = true;
 window.__game = { ROADS, ME, craft, banner, burst, checkDaily, performAction, createSite, camera, isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };

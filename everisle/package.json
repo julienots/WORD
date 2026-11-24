@@ -1,7 +1,7 @@
 {
   "name": "everisle",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Everisle — construction, survie et gestion de village insulaire en duo",
   "type": "module",
   "scripts": {
