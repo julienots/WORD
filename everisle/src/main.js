@@ -203,7 +203,7 @@ function villager(o) {
   [-.13, .13].forEach(x => { const e = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), cheek); e.position.set(x, 1.06, .2); e.scale.z = .3; g.add(e); });
   const arm = (side) => { const a = new THREE.Group(); a.position.set(side * .25, .84, 0); g.add(a); cyl(a, .065, .06, .38, shirt, 0, -.17, 0); const h = new THREE.Mesh(new THREE.SphereGeometry(.07, 10, 8), skin); h.position.y = -.38; a.add(h); return a; };
   const aL = arm(-1), aR = arm(1);
-  if (o.tool === 'pick') { const t = new THREE.Group(); t.position.set(0, -.38, 0); aR.add(t); cyl(t, .025, .025, .8, woodLight, 0, 0, .28, Math.PI / 2); const hd = box(t, .5, .07, .07, M('#9aa3ad', { metalness: .6, roughness: .4 }), 0, 0, .66); hd.rotation.y = 0; }
+  if (o.tool === 'pick') { const t = new THREE.Group(); t.position.set(0, -.38, 0); aR.add(t); cyl(t, .025, .025, .8, woodLight, 0, 0, .28, Math.PI / 2); const hd = box(t, .5, .07, .07, M('#9aa3ad', { metalness: .6, roughness: .4 }), 0, 0, .66); hd.rotation.y = 0; g.userData.toolHead = hd; }
   if (o.tool === 'bow') { const t = new THREE.Mesh(new THREE.TorusGeometry(.45, .025, 6, 20, Math.PI * .9), woodDark); t.position.set(0, -.38, .05); t.rotation.set(0, Math.PI / 2, Math.PI * .55); aL.add(t); }
   if (o.pack) { box(g, .34, .4, .2, M('#7a5232'), 0, .72, -.25); cyl(g, .08, .08, .36, M('#c9b48a'), 0, .98, -.28, 0, 0, Math.PI / 2); }
   if (o.log) { cyl(g, .12, .12, 1.1, woods[1], 0, 1.0, .18, 0, 0, Math.PI / 2); aL.rotation.x = aR.rotation.x = -1.3; }
@@ -677,14 +677,14 @@ try {
 } catch (e) { }
 const maxHP = () => 100 + (ME.lvl - 14) * 5;
 let NET_ROLE = 'solo';
-function save() { if (NET_ROLE === 'guest') return; try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, S, me: ME })); } catch (e) { } }
+function save() { if (NET_ROLE === 'guest') { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (d) { d.me = ME; localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } } catch (e) { } return; } try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 2, S, me: ME })); } catch (e) { } }
 
 const xpNeed = l => 1000 + l * 200;
 const UNLOCKS = { 13: '🧺 Marché & 🗼 tour de guet', 14: '🗺️ Prairie de l\'Est', 15: '🧱 Mur de pierre', 16: '💎 Collines de cristal', 18: '🏠 Demeures', 20: '🏰 Village fortifié', 25: '⚓ Port (bientôt)' };
 const nextUnlock = () => { const k = Object.keys(UNLOCKS).map(Number).find(k => k > S.lvl); return k ? `${UNLOCKS[k]} (Niv. ${k})` : '—'; };
 function addXP(n) {
   S.xp += n;
-  while (S.xp >= xpNeed(S.lvl)) { S.xp -= xpNeed(S.lvl); S.lvl++; sfx('level'); worldToast('🎉', `Île niveau ${S.lvl} !`, UNLOCKS[S.lvl] ? 'Débloqué : ' + UNLOCKS[S.lvl] : 'Prospérité en hausse'); }
+  while (S.xp >= xpNeed(S.lvl)) { S.xp -= xpNeed(S.lvl); S.lvl++; sfx('level'); if (typeof banner === 'function' && window._ready) { banner(`Île niveau ${S.lvl} !`, UNLOCKS[S.lvl] ? 'Débloqué : ' + UNLOCKS[S.lvl] : 'Prospérité en hausse', '🏝️'); burst(player.position.clone().setY(player.position.y + 1.5), FX.gold, 50, { speed: 5, up: 6, life: 1.4 }); } worldToast('🎉', `Île niveau ${S.lvl} !`, UNLOCKS[S.lvl] ? 'Débloqué : ' + UNLOCKS[S.lvl] : 'Prospérité en hausse'); }
 }
 function gainMe(n) {
   ME.xp += n;
@@ -760,7 +760,7 @@ function updateRegions(dt, silent) {
   REGIONS.forEach(r => {
     if (!r.open && S.lvl >= r.lvl) {
       r.open = true; r.apply(); removeTag(r.tag); r.tag = null; r.fadeT = silent ? 0 : 1.5;
-      if (silent) { scene.remove(r.mesh); r.mesh = null; } else toast('🗺️', `Nouveau territoire : ${r.name} !`, r.desc);
+      if (silent) { scene.remove(r.mesh); r.mesh = null; } else banner(`Nouveau territoire : ${r.name}`, r.desc, '🗺️');
     }
     if (r.mesh && r.open) { r.fadeT -= dt; r.mat.uniforms.uFade.value = Math.max(0, r.fadeT / 1.5); if (r.fadeT <= 0) { scene.remove(r.mesh); r.mesh = null; } }
   });
@@ -1448,7 +1448,7 @@ function finishSite(s, silent) {
   if (s.type === 'fire' && !FIRES.includes(s)) FIRES.push(s);
   connectSite(s); repaintMask(); drawMinimapBuilds();
   if (silent || NET_ROLE === 'guest') return;
-  sfx('done'); S.bld++; addXP(s.def.xp); S.builds.push({ id: s.id, type: s.type, x: s.x, z: s.z, ry: s.ry, level: 1 });
+  sfx('done'); burst(V(s.x, H(s.x, s.z) + .4, s.z), FX.dust, 26, { speed: 4, up: 1.5, size: .16, life: 1.1, spread: s.r * 1.6 }); burst(V(s.x, H(s.x, s.z) + s.def.th * .6, s.z), FX.gold, 24, { speed: 3.5, up: 4, size: .07 }); S.bld++; addXP(s.def.xp); S.builds.push({ id: s.id, type: s.type, x: s.x, z: s.z, ry: s.ry, level: 1 });
   if (s.def.time > 0) floatText(`+${s.def.xp} XP`, V(s.x, H(s.x, s.z) + 3, s.z), '#9fe8ff');
   if (s.type === 'farm') S.stats.farms++;
   if (s.def.cap) { S.stats.cabins++; for (let i = 0; i < s.def.cap; i++) newResident(s); }
@@ -1650,7 +1650,7 @@ function workerAI(r, dt, night) {
       u.anim = 'mine'; faceTo(r.v, s.x, s.z); siteProgress(s, dt / (s.def.time || 1) * .8 * spd); r.workAcc = (r.workAcc || 0) + dt; if (r.workAcc > 20) { r.workAcc = 0; r.rec.xp++; }
       break;
     }
-    case 'farmer': stationJob(r, dt, 'farm', spd, 8, s => { S.food += 2 + s.level; floatText(`+${2 + s.level} 🍒`, V(s.x, H(s.x, s.z) + 2, s.z)); return true; }, 'Cultive les champs'); break;
+    case 'farmer': stationJob(r, dt, 'farm', spd, 8, s => { const fa = Math.round((2 + s.level) * (S.rain ? 1.5 : 1)); S.food += fa; floatText(`+${fa} 🍒`, V(s.x, H(s.x, s.z) + 2, s.z)); return true; }, 'Cultive les champs'); break;
     case 'carpenter': stationJob(r, dt, 'workshop', spd, 7, s => { if (S.wood < 3) { r.status = 'Manque de bois'; return false; } S.wood -= 3; S.plank += s.level; S.stats.planks += s.level; floatText(`+${s.level} 🟫`, V(s.x, H(s.x, s.z) + 2.5, s.z)); checkQuests(); return true; }, 'Scie des planches'); break;
     case 'merchant': stationJob(r, dt, 'market', spd, 10, s => { const g = 4 + Math.floor(S.pop / 4); S.gold += g; floatText(`+${g} 🪙`, V(s.x, H(s.x, s.z) + 2.5, s.z)); return true; }, 'Tient le marché'); break;
     case 'fisher': {
@@ -1685,9 +1685,9 @@ function setTree(t, extraQ, k = 1, stump = false) {
   t.trunks.setMatrixAt(t.ti, tm4); t.trunks.instanceMatrix.needsUpdate = true;
 }
 TREES.forEach((t, i) => { t.id = i; });
-function hitTree(t, from) {
+function hitTree(t, from, dmg = 1) {
   if (t.state !== 'up') return false;
-  t.hp--; t.shake = .3;
+  t.hp -= dmg; t.shake = .3; fxTree(t, dmg > 1);
   if (t.hp <= 0) {
     t.state = 'falling'; t.t = 0; const dx = t.x - from.x, dz = t.z - from.z, l = Math.hypot(dx, dz) || 1; t.fdx = dx / l; t.fdz = dz / l;
     if (t.res) { t.res.target = null; t.res = null; }
@@ -1695,21 +1695,21 @@ function hitTree(t, from) {
   netEvent({ t: 'tree', i: t.id, st: t.state, hp: t.hp, fdx: t.fdx || 0, fdz: t.fdz || 0 });
   return t.state === 'falling';
 }
-function hitRock(r) {
+function hitRock(r, dmg = 1) {
   if (r.hp <= 0) return false;
-  r.hp--; r.shake = .25;
+  r.hp = Math.max(0, r.hp - dmg); r.shake = .25; fxRock(r, dmg > 1);
   if (r.hp <= 0) { r.mesh.visible = false; r.t = 0; if (r.res) { r.res.target = null; r.res = null; } } else r.mesh.scale.copy(r.base).multiplyScalar(.55 + r.hp / r.max * .45);
   netEvent({ t: 'rock', i: ROCKS.indexOf(r), hp: r.hp });
   return r.hp <= 0;
 }
-function pickBerry(b) { b.ready = false; b.t = 0; b.berries.visible = false; netEvent({ t: 'berry', i: BERRIES.indexOf(b), ready: false }); }
+function pickBerry(b) { burst(V(b.x, H(b.x, b.z) + .8, b.z), FX.berry, 10, { speed: 2.5, up: 2.5, size: .06 }); b.ready = false; b.t = 0; b.berries.visible = false; netEvent({ t: 'berry', i: BERRIES.indexOf(b), ready: false }); }
 function updateTrees(dt) {
   for (const t of TREES) {
     if (t.state === 'up' && t.shake > 0) { t.shake -= dt; const a = Math.sin(t.shake * 60) * t.shake * .25; tq2.setFromAxisAngle(tAxis.set(1, 0, 0), a); setTree(t, tq2); if (t.shake <= 0) setTree(t); }
     else if (t.state === 'falling') {
       t.t += dt; const k = Math.min(1, t.t / 1.0);
       tq2.setFromAxisAngle(tAxis.set(t.fdz, 0, -t.fdx), k * k * Math.PI * .48);
-      if (t.t < 1.6) setTree(t, tq2, 1, true); else { t.state = 'gone'; t.t = 0; setTree(t, null, .0001, true); }
+      if (t.t < 1.6) setTree(t, tq2, 1, true); else { t.state = 'gone'; t.t = 0; setTree(t, null, .0001, true); const fx = V(t.x + t.fdx * 3, H(t.x + t.fdx * 3, t.z + t.fdz * 3) + .3, t.z + t.fdz * 3); burst(fx, FX.dust, 14, { speed: 3, up: 1.5, size: .13, life: 1, spread: 2.5 }); burst(fx, FX.leaves, 12, { speed: 2.5, up: 2, size: .09, life: 1.6, spread: 3, gravity: 3 }); }
     } else if (t.state === 'gone') { t.t += dt; if (t.t > 75 && NET_ROLE !== 'guest' && !SITES.some(s => Math.hypot(s.x - t.x, s.z - t.z) < s.r + .6)) { t.state = 'growing'; t.t = 0; t.hp = 4; netEvent({ t: 'tree', i: t.id, st: 'growing', hp: 4 }); } }
     else if (t.state === 'growing') { t.t += dt; const k = Math.min(1, t.t / 4); setTree(t, null, .1 + .9 * (1 - Math.pow(1 - k, 3))); if (k >= 1) t.state = 'up'; }
   }
@@ -1750,11 +1750,11 @@ function spawnMonster(boss) {
 function hurtMonster(m, dmg, from) {
   const u = m.userData; if (u.dead) return;
   if (NET_ROLE === 'guest') { netSend({ t: 'req', k: 'hitmon', id: u.id, dmg }); u.hurt = .18; return; }
-  u.hp -= dmg; u.hurt = .18;
+  u.hp -= dmg; u.hurt = .18; burst(m.position.clone().setY(m.position.y + .6 * u.size), FX.shadow, 8, { speed: 3, up: 2.5, size: .07 });
   u.kb.set(m.position.x - from.x, 0, m.position.z - from.z).normalize().multiplyScalar(u.boss ? .5 : 1.6);
   if (u.hp <= 0) {
-    u.dead = true; u.dt = 0; S.stats.kills++;
-    if (u.boss) { S.ess += 5; S.gold += 60; S.stats.bosses++; addXP(200); removeTag(bossTag); bossTag = null; worldToast('🏆', 'Colosse d\'ombre vaincu !', '+60 🪙 · +5 ✨ · +200 XP'); }
+    u.dead = true; u.dt = 0; S.stats.kills++; burst(m.position.clone().setY(m.position.y + .6 * u.size), FX.shadow, u.boss ? 60 : 22, { speed: u.boss ? 6 : 4, up: 4, size: u.boss ? .16 : .1, life: 1.1 }); burst(m.position.clone().setY(m.position.y + .8), FX.gold, u.boss ? 30 : 6, { speed: 3, up: 4, size: .06 });
+    if (u.boss) { S.ess += 5; S.gold += 60; S.stats.bosses++; addXP(200); removeTag(bossTag); bossTag = null; worldToast('🏆', 'Colosse d\'ombre vaincu !', '+60 🪙 · +5 ✨ · +200 XP'); banner('Colosse d\'ombre vaincu !', '+60 🪙 · +5 🔮 · +200 XP', '🏆'); }
     else { S.ess++; S.gold += 5; addXP(20); }
     floatText(u.boss ? '+5 ✨ +60 🪙' : '+1 ✨ +5 🪙', m.position.clone().setY(m.position.y + 1.4 * u.size), '#d9b3ff'); checkQuests();
   }
@@ -1762,6 +1762,7 @@ function hurtMonster(m, dmg, from) {
 let shakeT = 0, deathT = 0;
 function damagePlayer(n) {
   if (ME.hp <= 0) return;
+  n = Math.max(1, Math.round(n * (1 - [0, .25, .45][ME.gear.armor])));
   ME.hp = Math.max(0, ME.hp - n); $('hurt').style.opacity = '1'; shakeT = .25; sfx('hurt');
   floatText('-' + n, player.position.clone().setY(player.position.y + 2.2), '#ff6a5a', false);
   if (ME.hp <= 0) { deathT = 2.5; toast('💫', 'Tu t\'es évanoui…', 'On te ramène au village'); }
@@ -1827,7 +1828,7 @@ function towersAI(dt, night) {
 function hurtDeer(d, dmg, from, byMe) {
   if (d.state === 'dead') return;
   if (NET_ROLE === 'guest') { netSend({ t: 'req', k: 'hitdeer', id: d.id }); return; }
-  d.hp -= dmg; d.fleeT = 3; d.flee = V(d.g.position.x - from.x, 0, d.g.position.z - from.z).normalize();
+  d.hp -= dmg; d.fleeT = 3; burst(d.g.position.clone().setY(d.g.position.y + 1.2), FX.fur, 8, { speed: 2.5, up: 2, size: .06 }); d.flee = V(d.g.position.x - from.x, 0, d.g.position.z - from.z).normalize();
   if (d.hp <= 0) {
     d.state = 'dead'; d.dt = 0; S.food += 6; S.leather += 1; S.stats.deer++; addXP(15);
     floatText('+6 🍖 +1 🦌', d.g.position.clone().setY(d.g.position.y + 2), '#ffd08a'); checkQuests();
@@ -1945,34 +1946,41 @@ function doAction() {
   useSlot(ACT[tg.type][2], true);
   sfx({ tree: 'chop', rock: 'pick', berry: 'berry', monster: 'hit', shoot: 'arrow', deer: 'arrow', site: 'build', mine: 'pick', fish: 'splash' }[tg.type]);
   gainMe(3);
-  if (NET_ROLE === 'guest') { netSend({ t: 'req', k: 'act', type: tg.type, id: tgId(tg) }); return; }
+  if (NET_ROLE === 'guest') { netSend({ t: 'req', k: 'act', type: tg.type, id: tgId(tg) }); const fr = { tree: 'wood', rock: tg.obj && tg.obj.kind === 'crystal' ? null : 'stone', berry: 'food' }[tg.type]; if (fr && tp) flyRes(fr, tp, 2); return; }
   performAction(tg.type, tg.obj, player);
 }
 // exécutée sur l'hôte (ou en solo) pour le joueur local comme pour le joueur distant
 function performAction(type, o, actor) {
   const ap = actor.position, tp = targetPos(type === 'fish' ? null : { type, obj: o }) || ap.clone().setY(ap.y + 2.2);
+  const g = gearOf(actor), me = actor === player, crit = Math.random() < .12;
+  const critFx = () => { if (crit) { floatText('CRITIQUE !', tp.clone().setY(tp.y + 1.2), '#ffe14a'); if (me) shakeT = Math.max(shakeT, .12); } };
   switch (type) {
-    case 'tree': { if (!o || o.state !== 'up') return; S.wood += 2; S.stats.woodCut += 2; floatText('+2 🪵', tp); addXP(4); if (hitTree(o, ap)) { S.wood += 4; S.stats.woodCut += 4; addXP(10); floatText('+4 🪵 Timber !', tp.clone().setY(tp.y + .8), '#ffd08a'); } break; }
-    case 'rock': {
-      if (!o || o.hp <= 0) return;
-      if (o.kind === 'crystal') { S.crystal++; S.stone++; floatText('+1 💎 +1 🪨', tp, '#9ff0ff'); addXP(8); }
-      else { const n = S.mineDone ? 3 : 2; S.stone += n; S.stats.stoneMined += n; floatText(`+${n} 🪨`, tp); addXP(4); if (rand() < .22) { S.iron++; floatText('+1 ⛓️ Fer', tp.clone().setY(tp.y + .6), '#cfe0ff'); } }
-      hitRock(o); break;
+    case 'tree': {
+      if (!o || o.state !== 'up') return; const n = 2 + g.tool; S.wood += n; S.stats.woodCut += n; floatText(`+${n} 🪵`, tp); if (me) flyRes('wood', tp, 2); addXP(4); critFx();
+      if (hitTree(o, ap, 1 + (g.tool >= 1 ? 1 : 0) + (crit ? 1 : 0))) { S.wood += 4; S.stats.woodCut += 4; addXP(10); floatText('+4 🪵 Timber !', tp.clone().setY(tp.y + .8), '#ffd08a'); if (me) flyRes('wood', tp, 3); }
+      break;
     }
-    case 'berry': { if (!o || !o.ready) return; pickBerry(o); S.food += 3; S.stats.berries++; floatText('+3 🍒', tp); addXP(5); break; }
-    case 'monster': if (o && !o.userData.dead) hurtMonster(o, 1, ap); break;
-    case 'shoot': if (o && !o.userData.dead) { const from = ap.clone().setY(ap.y + 1.4); shootArrow(from, o, () => hurtMonster(o, 1, from)); } break;
-    case 'deer': if (o && o.state !== 'dead') { const from = ap.clone().setY(ap.y + 1.4); shootArrow(from, o.g, () => hurtDeer(o, 1, from)); } break;
-    case 'site': if (o && needsWork(o)) { siteProgress(o, .05); addXP(3); floatText('🔨 +5 %', V(o.x, H(o.x, o.z) + 2.5, o.z)); } break;
+    case 'rock': {
+      if (!o || o.hp <= 0) return; critFx();
+      if (o.kind === 'crystal') { const c = 1 + (g.tool >= 2 ? 1 : 0); S.crystal += c; S.stone++; floatText(`+${c} 💎 +1 🪨`, tp, '#9ff0ff'); if (me) flyRes('stone', tp, 1); addXP(8); }
+      else { const n = (S.mineDone ? 3 : 2) + g.tool; S.stone += n; S.stats.stoneMined += n; floatText(`+${n} 🪨`, tp); if (me) flyRes('stone', tp, 2); addXP(4); if (rand() < .22) { S.iron++; floatText('+1 ⛓️ Fer', tp.clone().setY(tp.y + .6), '#cfe0ff'); if (me) flyRes('iron', tp, 1); } }
+      hitRock(o, 1 + (g.tool >= 2 ? 1 : 0) + (crit ? 1 : 0)); break;
+    }
+    case 'berry': { if (!o || !o.ready) return; pickBerry(o); S.food += 3; S.stats.berries++; floatText('+3 🍒', tp); if (me) flyRes('food', tp, 2); addXP(5); break; }
+    case 'monster': if (o && !o.userData.dead) { critFx(); hurtMonster(o, 1 + g.weapon + (crit ? 1 : 0), ap); } break;
+    case 'shoot': if (o && !o.userData.dead) { const from = ap.clone().setY(ap.y + 1.4), dmg = 1 + g.bow + (crit ? 1 : 0); critFx(); shootArrow(from, o, () => hurtMonster(o, dmg, from)); } break;
+    case 'deer': if (o && o.state !== 'dead') { const from = ap.clone().setY(ap.y + 1.4), dmg = 1 + g.bow; shootArrow(from, o.g, () => hurtDeer(o, dmg, from)); } break;
+    case 'site': if (o && needsWork(o)) { siteProgress(o, .05); addXP(3); floatText('🔨 +5 %', V(o.x, H(o.x, o.z) + 2.5, o.z)); burst(V(o.x, H(o.x, o.z) + 1, o.z), FX.dust, 5, { speed: 2, up: 2, size: .08 }); } break;
     case 'mine': {
       const amt = Math.min(10, S.stone, 60 - S.mineStone);
       if (amt <= 0) { floatText(S.mineDone ? 'Mine déjà améliorée' : 'Pas de pierre 🪨', tp, '#ff9a8a'); break; }
-      S.stone -= amt; S.mineStone += amt; S.stats.mineDeliver += amt; addXP(amt * 3); floatText(`-${amt} 🪨 livrées`, tp);
-      if (S.mineStone >= 60) { S.mineDone = true; addXP(250); addMineFlag(); worldToast('⛏️', 'Mine de pierre niveau 3 !', 'Chaque coup de pioche rapporte +50 % de pierre'); }
+      S.stone -= amt; S.mineStone += amt; S.stats.mineDeliver += amt; addXP(amt * 3); floatText(`-${amt} 🪨 livrées`, tp); burst(tp, FX.stone, 8, { speed: 2, up: 2 });
+      if (S.mineStone >= 60) { S.mineDone = true; addXP(250); addMineFlag(); banner('Mine niveau 3 !', '+50 % de pierre à chaque coup', '⛏️'); worldToast('⛏️', 'Mine de pierre niveau 3 !', 'Chaque coup de pioche rapporte +50 % de pierre'); }
       updateMineTag(); break;
     }
     case 'fish': {
-      if (rand() < .5) { S.food += 3; S.stats.fish++; addXP(6); floatText('+3 🐟', ap.clone().setY(ap.y + 2.2)); }
+      const wpt = V(sx(ap.z), -.7, ap.z); burst(wpt, FX.water, 8, { speed: 1.5, up: 2.5, size: .06 });
+      if (rand() < .5 + g.tool * .1) { S.food += 3; S.stats.fish++; addXP(6); floatText('+3 🐟', ap.clone().setY(ap.y + 2.2)); if (me) flyRes('food', ap.clone().setY(ap.y + 1.5), 2); }
       else floatText('… ça ne mord pas', ap.clone().setY(ap.y + 2.2), '#cfe0ff');
       break;
     }
@@ -2138,8 +2146,9 @@ function closeModal() { $('modal').classList.add('hidden'); modalOpen = null; mo
 $('mclose').addEventListener('click', closeModal);
 function openBag() {
   modalRefresh = openBag;
-  openModal('🎒 Réserves de l\'île', `<div class="grid">${Object.keys(RES_IC).map(k => `<div class="cell"><b>${RES_IC[k]}</b>${RES_NAME[k]}<br><span style="color:var(--gold)">${fmt(S[k])}</span></div>`).join('')}</div>
-  <p class="note">Les ressources sont communes aux deux joueurs. Ton personnage : <b>${esc(ME.name)}</b>, niveau ${ME.lvl} (${fmt(ME.xp)} XP), ${Math.round(ME.hp)}/${maxHP()} PV.</p>`);
+  openModal('🎒 Sac, réserves & équipement', `<div class="grid">${Object.keys(RES_IC).map(k => `<div class="cell"><b>${RES_IC[k]}</b>${RES_NAME[k]}<br><span style="color:var(--gold)">${fmt(S[k])}</span></div>`).join('')}</div>
+  <p class="note">Les ressources sont communes aux deux joueurs. Ton personnage : <b>${esc(ME.name)}</b>, niveau ${ME.lvl} (${fmt(ME.xp)} XP), ${Math.round(ME.hp)}/${maxHP()} PV.</p>${gearHtml()}`);
+  document.querySelectorAll('.craft').forEach(b => b.addEventListener('click', () => craft(b.dataset.k)));
 }
 function openVillage() {
   modalRefresh = openVillage;
@@ -2263,6 +2272,7 @@ function updatePlayer(dt, night) {
   } else if (Math.hypot(mx, mz) > .08) {
     const sp = 6.2 * (streamD(pp.x, pp.z) < 2 ? .55 : 1);
     pp.x += mx * sp * dt; pp.z += mz * sp * dt; facing = Math.atan2(mx, mz); u.anim = 'walk';
+    u.stepT = (u.stepT || 0) - dt; if (u.stepT <= 0) { u.stepT = .3; burst(V(pp.x, pp.y + .05, pp.z), streamD(pp.x, pp.z) < 2 ? FX.water : FX.dust, 2, { speed: .6, up: .8, size: .06, life: .5, gravity: 2, spread: .2 }); }
   } else u.anim = 'idle';
   collide(pp, .42);
   pp.y = Math.max(H(pp.x, pp.z), -1.05);
@@ -2276,6 +2286,185 @@ function updateCamera(dt) {
   camera.position.copy(camTarget).addScaledVector(CAM_OFF, zoom);
   if (shakeT > 0) { shakeT -= dt; camera.position.x += (Math.random() - .5) * shakeT * 1.2; camera.position.y += (Math.random() - .5) * shakeT * 1.2; }
   camera.lookAt(lookV.copy(camTarget).add(LOOK_OFF));
+}
+
+
+/* ================= SENSATIONS : particules, équipement, météo, coffre du jour, guide ================= */
+/* ---------- particules ---------- */
+const PART_N = 380;
+const partMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ roughness: .7, color: '#ffffff' }), PART_N);
+partMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); partMesh.frustumCulled = false;
+const PARTS = Array.from({ length: PART_N }, () => ({ life: 0, t: 0, p: V(), v: V(), s: .1, g: 9, drag: 1, spin: 0 }));
+let partI = 0;
+const pm4 = new THREE.Matrix4(), pq = new THREE.Quaternion(), pe = new THREE.Euler(), psv = V(), pcol = new THREE.Color();
+for (let i = 0; i < PART_N; i++) { pm4.makeScale(0, 0, 0); partMesh.setMatrixAt(i, pm4); partMesh.setColorAt(i, pcol.set('#ffffff')); }
+scene.add(partMesh);
+const FX = {
+  chips: ['#8a5a36', '#a8784a', '#c89a64'], leaves: ['#4f8a2a', '#7fb83a', '#a6c845'], stone: ['#9aa3ad', '#c8ced6', '#7a828c'], spark: ['#ffe08a', '#fff3c0'],
+  berry: ['#d8263a', '#ff5a6a', '#7fb83a'], shadow: ['#5a2a8a', '#2b1a3d', '#ff3d7a', '#9a4ad8'], gold: ['#ffd35a', '#ffb02e', '#fff3c0', '#ff7a4a', '#4fe0d0', '#ff5a9a'],
+  dust: ['#c8b08a', '#d8c8a8', '#b09a78'], fur: ['#9a6a3e', '#efe6d8'], crystal: ['#8ff0ff', '#5fd0ff', '#ffffff'], water: ['#a8e8ff', '#ffffff', '#5fc8e0'],
+};
+function burst(pos, colors, n, o = {}) {
+  if (QUALITY.cur === 'low') n = Math.ceil(n / 2);
+  for (let k = 0; k < n; k++) {
+    const i = partI++ % PART_N, q = PARTS[i], sp = (o.speed ?? 3) * (.5 + Math.random() * .7), a = Math.random() * TAU, spr = o.spread ?? .4;
+    q.p.set(pos.x + (Math.random() - .5) * spr, pos.y + (Math.random() - .5) * spr * .5, pos.z + (Math.random() - .5) * spr);
+    q.v.set(Math.cos(a) * sp, (o.up ?? 3) * (.6 + Math.random() * .8), Math.sin(a) * sp);
+    q.life = (o.life ?? .8) * (.7 + Math.random() * .6); q.t = 0; q.s = (o.size ?? .08) * (.6 + Math.random() * .8); q.g = o.gravity ?? 9; q.drag = o.drag ?? 1; q.spin = Math.random() * 10;
+    partMesh.setColorAt(i, pcol.set(colors[Math.floor(Math.random() * colors.length)]));
+  }
+  partMesh.instanceColor.needsUpdate = true;
+}
+function updateParticles(dt) {
+  let any = false;
+  for (let i = 0; i < PART_N; i++) {
+    const q = PARTS[i];
+    if (q.t >= q.life) { if (q.life > 0) { pm4.makeScale(0, 0, 0); partMesh.setMatrixAt(i, pm4); q.life = 0; any = true; } continue; }
+    q.t += dt; q.v.y -= q.g * dt; q.v.multiplyScalar(Math.max(0, 1 - q.drag * dt)); q.p.addScaledVector(q.v, dt);
+    const gy = H(q.p.x, q.p.z) + .03; if (q.p.y < gy) { q.p.y = gy; q.v.y *= -.3; q.v.x *= .6; q.v.z *= .6; }
+    const k = 1 - Math.max(0, (q.t - q.life * .6) / (q.life * .4));
+    pe.set(q.spin * q.t, q.spin * q.t * .7, 0); pq.setFromEuler(pe); psv.setScalar(Math.max(.0001, q.s * k));
+    pm4.compose(q.p, pq, psv); partMesh.setMatrixAt(i, pm4); any = true;
+  }
+  if (any) partMesh.instanceMatrix.needsUpdate = true;
+}
+const fxTree = (t, big) => { const y = H(t.x, t.z); burst(V(t.x, y + 1.2, t.z), FX.chips, big ? 12 : 7, { speed: 3, up: 3, size: .07 }); burst(V(t.x, y + t.s.y * .55, t.z), FX.leaves, big ? 10 : 5, { speed: 1.5, up: .5, gravity: 1.2, drag: 1.5, life: 2, spread: 2.5, size: .09 }); };
+const fxRock = (r, big) => { const p = V(r.x, H(r.x, r.z) + .6, r.z); if (r.kind === 'crystal') burst(p, FX.crystal, big ? 14 : 9, { speed: 3.5, size: .07 }); else { burst(p, FX.stone, big ? 12 : 7, { speed: 3.2, size: .08 }); burst(p, FX.spark, 3, { speed: 4, up: 4, size: .04, life: .4 }); } };
+
+/* ---------- ressources qui volent vers le compteur ---------- */
+const PILL = { wood: 'r-wood', stone: 'r-stone', iron: 'r-iron', plank: 'r-plank', food: 'r-food', gold: 'r-gold' };
+function flyRes(res, wpos, n = 1) {
+  const id = PILL[res]; if (!id || document.hidden) return; const pill = $(id).parentElement, tr = pill.getBoundingClientRect(), s = screenPos(wpos); if (!s.ok) return;
+  for (let i = 0; i < Math.min(n, 4); i++) {
+    const el = document.createElement('div'); el.className = 'flyres'; el.textContent = RES_IC[res]; el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; $('hud').appendChild(el);
+    const dx = tr.left + tr.width * .3 - s.x, dy = tr.top + tr.height / 2 - s.y, jx = (Math.random() - .5) * 60;
+    const an = el.animate([{ transform: 'translate(-50%,-50%) scale(.5)', opacity: 0 }, { transform: `translate(calc(-50% + ${jx}px), calc(-50% - ${40 + Math.random() * 30}px)) scale(1.25)`, opacity: 1, offset: .3 }, { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.6)`, opacity: .9 }], { duration: 700 + i * 80, delay: i * 70, easing: 'cubic-bezier(.55,0,.65,1)', fill: 'forwards' });
+    an.onfinish = () => { el.remove(); pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); };
+  }
+}
+
+/* ---------- grande annonce ---------- */
+function banner(title, sub = '', ic = '✨') {
+  const el = $('banner'); el.innerHTML = `<div class="bi">${ic}</div><div class="bt">${esc(title)}</div><div class="bs">${esc(sub)}</div>`;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+
+/* ---------- équipement personnel ---------- */
+const GEAR = {
+  tool: { ic: '⛏️', names: ['Outils en pierre', 'Outils en fer', 'Outils en cristal'], cost: [null, { iron: 6, plank: 4 }, { crystal: 4, iron: 8, ess: 3 }], fx: ['Récolte normale', 'Arbres abattus 2× plus vite · +1 ressource', 'Roche taillée 2× plus vite · +2 ressources'] },
+  weapon: { ic: '🗡️', names: ['Épée en bois', 'Épée de fer', 'Lame de cristal'], cost: [null, { iron: 5, leather: 1 }, { crystal: 5, iron: 6, ess: 4 }], fx: ['1 dégât', '2 dégâts', '3 dégâts'] },
+  bow: { ic: '🏹', names: ['Arc simple', 'Arc renforcé', 'Arc enchanté'], cost: [null, { plank: 4, leather: 2 }, { crystal: 3, ess: 3, plank: 4 }], fx: ['1 dégât par flèche', '2 dégâts par flèche', '3 dégâts par flèche'] },
+  armor: { ic: '🛡️', names: ['Tunique', 'Armure de cuir', 'Armure de fer'], cost: [null, { leather: 4, plank: 2 }, { iron: 10, leather: 3 }], fx: ['Aucune protection', '-25 % de dégâts', '-45 % de dégâts'] },
+};
+ME.gear = Object.assign({ tool: 0, weapon: 0, bow: 0, armor: 0 }, ME.gear || {});
+const gearOf = a => (a === player ? ME.gear : (netMate.gear || { tool: 0, weapon: 0, bow: 0, armor: 0 }));
+const HEAD_COL = ['#9aa3ad', '#e4e8ee', '#7ff0ff'];
+function applyGearVisual(c, g) {
+  const u = c.userData;
+  if (u.toolHead) { u.toolHead.material = M(HEAD_COL[g.tool], { metalness: .7, roughness: .3, emissive: g.tool === 2 ? '#2fb8ff' : '#000', emissiveIntensity: g.tool === 2 ? .8 : 0 }); }
+  if (u.armorMesh) { c.remove(u.armorMesh); u.armorMesh = null; }
+  if (g.armor > 0) {
+    const a = new THREE.Group(), m = M(g.armor === 1 ? '#7a4a2a' : '#9aa3b0', { metalness: g.armor === 2 ? .6 : 0, roughness: .5 });
+    box(a, .46, .34, .36, m, 0, .72, 0); box(a, .2, .1, .22, m, -.25, .9, 0); box(a, .2, .1, .22, m, .25, .9, 0);
+    c.add(a); u.armorMesh = a;
+  }
+  document.querySelectorAll('.slot').forEach(s => { const k = { 0: 'tool', 1: 'tool', 2: 'weapon', 3: 'bow' }[s.dataset.i]; if (!k) return; s.dataset.tier = (c === player ? ME.gear : g)[k]; });
+}
+function craft(item) {
+  const tier = ME.gear[item] + 1, cost = GEAR[item].cost[tier]; if (!cost) return;
+  if (!canAfford(cost)) { toast('🛠️', 'Ressources insuffisantes', costTxt(cost)); return; }
+  if (NET_ROLE === 'guest') { netSend({ t: 'req', k: 'craft', item, tier }); return; }
+  Object.entries(cost).forEach(([k, v]) => S[k] -= v);
+  gearDone(item, tier);
+}
+function gearDone(item, tier) {
+  ME.gear[item] = tier; applyGearVisual(player, ME.gear); sfx('level');
+  burst(player.position.clone().setY(player.position.y + 1.2), FX.gold, 30, { speed: 3, up: 4 });
+  banner(GEAR[item].names[tier], GEAR[item].fx[tier], GEAR[item].ic); save();
+  if (modalRefresh) modalRefresh();
+}
+function gearHtml() {
+  return `<h5 class="sub">Équipement de ${esc(ME.name)}</h5>` + Object.entries(GEAR).map(([k, g]) => {
+    const t = ME.gear[k], next = g.cost[t + 1];
+    return `<div class="vrow"><span class="f">${g.ic}</span><div style="flex:1"><b>${g.names[t]}</b> <span class="stars">${'★'.repeat(t + 1)}${'☆'.repeat(2 - t)}</span><small>${g.fx[t]}</small></div>${next ? `<button class="gbtn tap craft" data-k="${k}" ${canAfford(next) ? '' : 'disabled'}>🛠️ ${g.names[t + 1]}<br><small>${costTxt(next)}</small></button>` : '<span class="ok">Max</span>'}</div>`;
+  }).join('');
+}
+
+/* ---------- météo : pluie ---------- */
+const RAIN_N = MOBILE ? 900 : 1600, RB = { x: 46, y: 22, z: 40 };
+const rainGeo = new THREE.BufferGeometry(), rainPos = new Float32Array(RAIN_N * 6), rainSeed = new Float32Array(RAIN_N * 3);
+for (let i = 0; i < RAIN_N; i++) { rainSeed[i * 3] = Math.random() * RB.x - RB.x / 2; rainSeed[i * 3 + 1] = Math.random() * RB.y; rainSeed[i * 3 + 2] = Math.random() * RB.z - RB.z / 2; }
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+const rainMat = new THREE.LineBasicMaterial({ color: '#b8d4ec', transparent: true, opacity: 0, depthWrite: false });
+const rain = new THREE.LineSegments(rainGeo, rainMat); rain.frustumCulled = false; scene.add(rain);
+let rainK = 0, weatherT = 50, wasRain = !!S.rain;
+function updateWeather(dt) {
+  if (NET_ROLE !== 'guest') { weatherT -= dt; if (weatherT <= 0) { weatherT = rr(45, 110); S.rain = Math.random() < .3 ? 1 : 0; } }
+  const want = S.rain ? 1 : 0; rainK += (want - rainK) * Math.min(1, dt * .5);
+  if (!!S.rain !== wasRain) { wasRain = !!S.rain; toast(S.rain ? '🌧️' : '🌤️', S.rain ? 'Il commence à pleuvoir' : 'La pluie s\'arrête', S.rain ? 'Les cultures poussent 50 % plus vite' : ''); }
+  rain.visible = rainK > .02; rainMat.opacity = .55 * rainK;
+  if (rain.visible) {
+    const cx = camTarget.x, cz = camTarget.z + 4;
+    for (let i = 0; i < RAIN_N; i++) {
+      let y = rainSeed[i * 3 + 1] - dt * 24; if (y < 0) y += RB.y; rainSeed[i * 3 + 1] = y;
+      const x = cx + rainSeed[i * 3] + y * .12, z = cz + rainSeed[i * 3 + 2], gy = H(cx, cz) - 2;
+      rainPos.set([x, gy + y, z, x + .06, gy + y + .7, z], i * 6);
+    }
+    rainGeo.attributes.position.needsUpdate = true;
+  }
+  sun.intensity *= 1 - .4 * rainK; hemi.intensity *= 1 + .1 * rainK; fill.intensity *= 1 - .3 * rainK;
+  scene.fog.density = .0075 + .004 * rainK; scene.fog.color.lerp(tmpC.set('#8a98a0'), rainK * .45); scene.background.copy(scene.fog.color);
+  if (AU.rainG) AU.rainG.gain.value = SETTINGS.sound ? .16 * rainK : 0;
+  else if (AU.ctx && AU.noise) { const s = AU.ctx.createBufferSource(); s.buffer = AU.noise; s.loop = true; const f = AU.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = .4; AU.rainG = AU.ctx.createGain(); AU.rainG.gain.value = 0; s.connect(f); f.connect(AU.rainG); AU.rainG.connect(AU.master); s.start(); }
+}
+const tmpC = new THREE.Color();
+
+/* ---------- coffre du jour ---------- */
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function dailyReward(streak) { const r = { wood: 20 + streak * 5, stone: 15 + streak * 4, food: 10 + streak * 2, gold: 30 + streak * 10 }; if (streak % 7 === 0) { r.crystal = 3; r.ess = 3; } if (streak >= 3) r.iron = 2 + Math.floor(streak / 3); return r; }
+function checkDaily() {
+  let d = { last: '', streak: 0 }; try { d = Object.assign(d, JSON.parse(localStorage.getItem('everisle-daily') || '{}')); } catch (e) { }
+  const t = today(); if (d.last === t) return;
+  const y = new Date(Date.now() - 864e5), ys = `${y.getFullYear()}-${y.getMonth() + 1}-${y.getDate()}`;
+  const streak = d.last === ys ? d.streak + 1 : 1, rew = dailyReward(streak);
+  openModal('🎁 Coffre du jour', `<div class="chest">🎁</div><p style="text-align:center">Série de connexion : <b style="color:var(--gold)">${streak} jour${streak > 1 ? 's' : ''}</b> ${'🔥'.repeat(Math.min(streak, 7))}</p>
+    <div class="grid" style="margin-top:1vh">${Object.entries(rew).map(([k, v]) => `<div class="cell"><b>${RES_IC[k]}</b>+${v}</div>`).join('')}</div>
+    <p class="note" style="text-align:center">Reviens chaque jour : la récompense grandit, et tous les 7 jours le coffre contient des cristaux !</p>
+    <div style="text-align:center"><button class="gbtn tap" id="chest-open" style="font-size:2.2vh;padding:1.2vh 4vh">Ouvrir le coffre</button></div>`);
+  $('chest-open').addEventListener('click', () => {
+    try { localStorage.setItem('everisle-daily', JSON.stringify({ last: t, streak })); } catch (e) { }
+    if (NET_ROLE === 'guest') netSend({ t: 'req', k: 'gift', rew }); else Object.entries(rew).forEach(([k, v]) => { S[k] += v; });
+    Object.keys(rew).forEach(k => flyRes(k, player.position.clone().setY(player.position.y + 1.5), 3));
+    burst(player.position.clone().setY(player.position.y + 1.4), FX.gold, 40, { speed: 4, up: 5 }); sfx('coin'); sfx('level');
+    closeModal(); save();
+  }, { once: true });
+}
+
+/* ---------- flèche-guide vers l'objectif ---------- */
+let guideT = 0, guideTgt = null;
+function nearestOf(list, ok, p) { let b = null, bd = 1e9; for (const o of list) { if (!ok(o)) continue; const x = o.x ?? o.g.position.x, z = o.z ?? o.g.position.z, d = Math.hypot(x - p.x, z - p.z); if (d < bd) { bd = d; b = o; } } return b; }
+function findGuide() {
+  const q = QUESTS.find(q => !S.qdone[q.id]); if (!q) return null; const P = player.position; let o;
+  switch (q.key) {
+    case 'woodCut': o = nearestOf(TREES, t => t.state === 'up' && t.x > BOUNDS.x0 && t.x < BOUNDS.x1 && t.z > BOUNDS.z0 && t.z < BOUNDS.z1, P); return o && { p: V(o.x, H(o.x, o.z) + 3, o.z), ic: '🪓' };
+    case 'berries': o = nearestOf(BERRIES, b => b.ready && b.x < BOUNDS.x1, P); return o && { p: V(o.x, H(o.x, o.z) + 2, o.z), ic: '🍒' };
+    case 'stoneMined': o = nearestOf(ROCKS, r => r.hp > 0 && r.kind !== 'crystal' && r.z > BOUNDS.z0, P); return o && { p: V(o.x, H(o.x, o.z) + 1.6, o.z), ic: '⛏️' };
+    case 'mineDeliver': return S.mineDone ? null : { p: V(MINE_PT.x, MINE_PT.y + 2, MINE_PT.z), ic: '🪨' };
+    case 'deer': o = nearestOf(DEER, d => d.state !== 'dead' && d.g.position.x < BOUNDS.x1, P); return o && { p: o.g.position.clone().setY(o.g.position.y + 2.6), ic: '🦌' };
+    case 'fish': return { p: V(FISH_SPOT.x, H(FISH_SPOT.x, FISH_SPOT.z) + 1.5, FISH_SPOT.z), ic: '🎣' };
+    case 'kills': case 'bosses': o = nearestMonster(P, 60); return o && { p: o.position.clone().setY(o.position.y + 2), ic: '⚔️' };
+  }
+  return null;
+}
+function updateGuide(dt) {
+  const el = $('guide'); guideT -= dt; if (guideT <= 0) { guideT = .3; guideTgt = findGuide(); }
+  if (!guideTgt || buildMode || Math.hypot(guideTgt.p.x - player.position.x, guideTgt.p.z - player.position.z) < 3.5) { el.style.display = 'none'; return; }
+  const s = screenPos(guideTgt.p), w = W(), h = Hh(), mx = w * .07, my = h * .2, onScreen = s.x > mx && s.x < w - mx && s.y > my && s.y < h - h * .2 && pv.z < 1;
+  el.style.display = 'block';
+  if (onScreen) { el.className = 'pin'; el.innerHTML = `<span>${guideTgt.ic}</span>`; el.style.transform = `translate(${s.x}px,${s.y}px) translate(-50%,-100%)`; return; }
+  const cx = w / 2, cy = h / 2; let dx = s.x - cx, dy = s.y - cy; if (pv.z > 1) { dx = -dx; dy = -dy; }
+  const k = Math.min((w / 2 - mx * 2.2) / Math.abs(dx || 1), (h / 2 - my) / Math.abs(dy || 1)), ex = cx + dx * k, ey = Math.min(cy + dy * k, h * .68), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  el.className = 'edge'; el.innerHTML = `<i style="transform:rotate(${ang}deg)">➤</i><span>${guideTgt.ic}</span>`; el.style.transform = `translate(${ex}px,${ey}px) translate(-50%,-50%)`;
 }
 
 /* ================= DUO EN LIGNE (pair à pair) =================
@@ -2365,7 +2554,7 @@ function applyFull(f, hostName) {
   REGIONS.forEach(r => { if (r.open) { r.open = false; if (!r.mesh) makeBarrier(r); } });
   updateRegions(0, true);
   if (S.mineDone) addMineFlag(); updateMineTag();
-  player = lyra; mate = kaelC; player.userData.anim = 'idle';
+  player = lyra; mate = kaelC; player.userData.anim = 'idle'; applyGearVisual(kaelC, { tool: 0, weapon: 0, bow: 0, armor: 0 }); applyGearVisual(lyra, ME.gear);
   $('av1').firstChild.textContent = '👩🏽'; $('av2').firstChild.textContent = '🧑🏻';
   $('p1card').classList.add('p2'); $('p2card').classList.remove('p2');
   player.position.set(f.me[0] + 1.5, 0, f.me[1] + 1.5); player.position.y = H(player.position.x, player.position.z);
@@ -2378,7 +2567,7 @@ function onNet(m, role) {
   if (role === 'host') {
     switch (m.t) {
       case 'join': netMate.name = String(m.name || 'Lyra').slice(0, 14); updateMateTag(); worldToast('🤝', `${netMate.name} a rejoint ton île !`, 'Jouez ensemble : tout est partagé'); refreshDuo(); break;
-      case 'me': { const [x, z, ry, a, sw, sh] = m.p; netMate.p.set(x, 0, z); netMate.ry = ry; netMate.anim = ANIMS[a] || 'idle'; if (sw) lyra.userData.swing = .35; if (sh) lyra.userData.shoot = .35; netMate.hp = m.hp; break; }
+      case 'me': { const [x, z, ry, a, sw, sh] = m.p; netMate.p.set(x, 0, z); netMate.ry = ry; netMate.anim = ANIMS[a] || 'idle'; if (sw) lyra.userData.swing = .35; if (sh) lyra.userData.shoot = .35; netMate.hp = m.hp; if (m.g && JSON.stringify(m.g) !== JSON.stringify(netMate.gear)) { netMate.gear = m.g; applyGearVisual(lyra, m.g); } break; }
       case 'req': hostRequest(m); break;
     }
     return;
@@ -2389,9 +2578,9 @@ function onNet(m, role) {
     case 'snap': applySnap(m); break;
     case 'toast': toast(m.face, m.title, m.sub); break;
     case 'fx': floatText(m.txt, V(...m.p), m.c || undefined, false); break;
-    case 'tree': { const t = TREES[m.i]; if (!t) break; t.hp = m.hp; if (m.st === 'falling' && t.state === 'up') { t.state = 'falling'; t.t = 0; t.fdx = m.fdx; t.fdz = m.fdz; } else if (m.st === 'growing') { t.state = 'growing'; t.t = 0; } else if (m.st === 'up' && t.state === 'up') t.shake = .3; break; }
-    case 'rock': { const r = ROCKS[m.i]; if (!r) break; r.hp = m.hp; r.shake = .25; r.mesh.visible = m.hp > 0; r.mesh.scale.copy(r.base).multiplyScalar(m.hp >= r.max ? 1 : .55 + m.hp / r.max * .45); break; }
-    case 'berry': { const b = BERRIES[m.i]; if (b) { b.ready = m.ready; b.berries.visible = m.ready; } break; }
+    case 'tree': { const t = TREES[m.i]; if (!t) break; t.hp = m.hp; fxTree(t); if (m.st === 'falling' && t.state === 'up') { t.state = 'falling'; t.t = 0; t.fdx = m.fdx; t.fdz = m.fdz; } else if (m.st === 'growing') { t.state = 'growing'; t.t = 0; } else if (m.st === 'up' && t.state === 'up') t.shake = .3; break; }
+    case 'rock': { const r = ROCKS[m.i]; if (!r) break; if (m.hp < r.hp) fxRock(r); r.hp = m.hp; r.shake = .25; r.mesh.visible = m.hp > 0; r.mesh.scale.copy(r.base).multiplyScalar(m.hp >= r.max ? 1 : .55 + m.hp / r.max * .45); break; }
+    case 'berry': { const b = BERRIES[m.i]; if (b) { if (!m.ready) burst(V(b.x, H(b.x, b.z) + .8, b.z), FX.berry, 10, { speed: 2.5, up: 2.5, size: .06 }); b.ready = m.ready; b.berries.visible = m.ready; } break; }
     case 'site': {
       const n = m.s; let s = SITES.find(x => x.id === n.id);
       if (!s) { s = createSite(n.type, n.x, n.z, n.ry, { id: n.id, level: n.level, p: n.p }); }
@@ -2405,6 +2594,7 @@ function onNet(m, role) {
     case 'job': { const r = RESIDENTS.find(r => r.rec.id === m.id); if (r) { r.rec.job = m.job; r.tag.el.querySelector('.jt').textContent = `${JOBS[m.job].ic} ${JOBS[m.job].n}`; } break; }
     case 'arrow': shootArrow(V(...m.f), { position: V(...m.to).setY(m.to[1] - .5) }, null, false); break;
     case 'dmg': damagePlayer(m.n); break;
+    case 'crafted': gearDone(m.item, m.tier); break;
   }
 }
 function hostRequest(m) {
@@ -2417,7 +2607,9 @@ function hostRequest(m) {
     case 'trade': doTrade(m.kind, m.arg); break;
     case 'eat': if (S.food >= 2) S.food -= 2; break;
     case 'hitmon': { const mo = MONSTERS.find(x => x.userData.id === m.id); if (mo) hurtMonster(mo, Math.min(2, m.dmg || 1), lyra.position); break; }
-    case 'hitdeer': { const d = DEER[m.id]; if (d) hurtDeer(d, 1, lyra.position); break; }
+    case 'hitdeer': { const d = DEER[m.id]; if (d) hurtDeer(d, 1 + ((netMate.gear || {}).bow || 0), lyra.position); break; }
+    case 'craft': { const g = GEAR[m.item], cost = g && (m.tier === 1 || m.tier === 2) && g.cost[m.tier]; if (cost && canAfford(cost)) { Object.entries(cost).forEach(([k, v]) => S[k] -= v); netSend({ t: 'crafted', item: m.item, tier: m.tier }); } else netSend({ t: 'toast', face: '🛠️', title: 'Ressources insuffisantes', sub: '' }); break; }
+    case 'gift': { if (m.rew) Object.entries(m.rew).forEach(([k, v]) => { if (RES_IC[k] && v > 0 && v < 400) S[k] += v; }); break; }
   }
 }
 const npcList = () => [[1, builder], [2, carrier], ...RESIDENTS.map(r => [r.rec.id, r.v])];
@@ -2430,12 +2622,14 @@ function sendSnap() {
     npc: npcList().map(([id, c]) => [id, +c.position.x.toFixed(2), +c.position.y.toFixed(2), +c.position.z.toFixed(2), +c.rotation.y.toFixed(2), Math.max(0, ANIMS.indexOf(c.userData.anim)), c.visible ? 1 : 0, c.userData.carry ? 1 : 0]),
     mon: MONSTERS.filter(m => !m.userData.dead).map(m => [m.userData.id, +m.position.x.toFixed(2), +m.position.z.toFixed(2), m.userData.boss ? 1 : 0, m.userData.hurt > 0 ? 1 : 0]),
     deer: DEER.map(d => [+d.g.position.x.toFixed(2), +d.g.position.z.toFixed(2), +d.g.rotation.y.toFixed(2), d.state === 'dead' ? 1 : 0, d.fleeT > 0 ? 1 : d.state === 'walk' ? .5 : 0]),
-    sites: SITES.filter(needsWork).map(s => [s.id, s.p, s.upg ? s.upg.p : -1]),
+    sites: SITES.filter(needsWork).map(s => [s.id, s.p, s.upg ? s.upg.p : -1]), mg: ME.gear,
   };
   rstatT -= .1; if (rstatT <= 0) { rstatT = 1; snap.rs = RESIDENTS.map(r => [r.rec.id, r.status, r.rec.xp]); snap.bs = bram.status; }
   netSend(snap);
 }
 function applySnap(m) {
+  if (m.s.lvl > S.lvl && S.lvl) { banner(`Île niveau ${m.s.lvl} !`, UNLOCKS[m.s.lvl] ? 'Débloqué : ' + UNLOCKS[m.s.lvl] : 'Prospérité en hausse', '🏝️'); burst(player.position.clone().setY(player.position.y + 1.5), FX.gold, 50, { speed: 5, up: 6, life: 1.4 }); sfx('level'); }
+  if (m.mg && JSON.stringify(m.mg) !== JSON.stringify(netMate.gear)) { netMate.gear = m.mg; applyGearVisual(kaelC, m.mg); }
   const keep = { builds: S.builds, villagers: S.villagers };
   Object.assign(S, m.s, keep);
   const [x, z, ry, a, sw, sh] = m.me; netMate.p.set(x, 0, z); netMate.ry = ry; netMate.anim = ANIMS[a]; if (sw) kaelC.userData.swing = .35; if (sh) kaelC.userData.shoot = .35;
@@ -2443,7 +2637,7 @@ function applySnap(m) {
   m.npc.forEach(([id, x2, y2, z2, r2, a2, vis, carry]) => { const c = map.get(id); if (!c) return; c.userData.net = { x: x2, y: y2, z: z2, ry: r2 }; c.userData.anim = ANIMS[a2]; c.visible = !!vis; c.userData.carry = !!carry; });
   const seen = new Set();
   m.mon.forEach(([id, x2, z2, boss, hurt]) => { seen.add(id); let mo = MONSTERS.find(q => q.userData.id === id); if (!mo) { mo = makeMonster(id, !!boss, x2, z2); mo.userData.age = 1; } mo.userData.net = { x: x2, z: z2 }; if (hurt) mo.userData.hurt = .18; });
-  MONSTERS.forEach(mo => { if (!seen.has(mo.userData.id) && !mo.userData.dead) { mo.userData.dead = true; mo.userData.dt = 0; } });
+  MONSTERS.forEach(mo => { if (!seen.has(mo.userData.id) && !mo.userData.dead) { mo.userData.dead = true; mo.userData.dt = 0; burst(mo.position.clone().setY(mo.position.y + .6), FX.shadow, 20, { speed: 4, up: 4, size: .1, life: 1.1 }); } });
   m.deer.forEach(([x2, z2, r2, dead, mv], i) => { const d = DEER[i]; if (!d) return; d.net = { x: x2, z: z2, ry: r2 }; d.netMv = mv; if (dead && d.state !== 'dead') { d.state = 'dead'; d.dt = 0; } else if (!dead && d.state === 'dead') { d.state = 'graze'; d.g.rotation.z = 0; d.g.visible = true; d.g.position.set(x2, H(x2, z2), z2); } });
   m.sites.forEach(([id, p, up]) => { const s = SITES.find(q => q.id === id); if (!s) return; if (up >= 0 && s.upg) { s.upg.p = up; applySite(s); } else if (!s.upg) { s.p = p; applySite(s); } if (s.tag) { const pp = up >= 0 ? up : p; s.tag.el.querySelector('.st').textContent = `👷 Construction… ${Math.floor(pp * 100)} %`; s.tag.el.querySelector('.pb i').style.width = (pp * 100) + '%'; } });
   if (m.rs) { m.rs.forEach(([id, st, xp]) => { const r = RESIDENTS.find(q => q.rec.id === id); if (r) { r.status = st; r.rec.xp = xp; } }); bram.status = m.bs; }
@@ -2534,6 +2728,7 @@ if (S.mineDone) addMineFlag();
 updateRegions(0, true);
 addTag('<div class="box">Bram<small>🔨 Constructeur</small></div>', builder, 1.75, 'near');
 updateMateTag();
+applyGearVisual(player, ME.gear);
 
 /* ---------- boucle ---------- */
 const clock = new THREE.Clock(); let hudT = 0, saveT = 0, netT = 0, lastAct = '', errShown = false, simT = 0;
@@ -2547,7 +2742,7 @@ function loop() {
 function tick(dt, t) {
   uTime.value = t; window._water.uniforms.uTime.value = t; grade.uniforms.uTime.value = t;
   const guest = NET_ROLE === 'guest';
-  const night = updateDay(guest ? 0 : dt);
+  const night = updateDay(guest ? 0 : dt); updateWeather(dt);
   updatePlayer(dt, night);
   updateTrees(dt); updateResources(dt); updateRegions(dt, false);
   if (guest) { guestSim(dt, t); guestMate(dt); }
@@ -2556,7 +2751,7 @@ function tick(dt, t) {
     if (netMate.on) remoteMate(dt); else lyraAI(dt, night);
     monstersAI(dt, t, night); towersAI(dt, night); deerAI(dt, t);
   }
-  arrowsAI(dt); updateSmoke(dt); chickensAI(dt, t); updateAudio(dt, night);
+  arrowsAI(dt); updateParticles(dt); updateSmoke(dt); chickensAI(dt, t); updateAudio(dt, night);
   PLAYER_U.value.copy(player.position);
   LAMPS.forEach(b => { if (b.light) b.light.intensity = nightK * (QUALITY.cur === 'low' ? 0 : 5); });
   BANNERS.forEach((b, i) => { b.rotation.y = Math.sin(t * 1.6 + i) * .3; });
@@ -2573,21 +2768,21 @@ function tick(dt, t) {
   const a = buildMode ? ['✔️', 'Placer'] : curTarget ? ACT[curTarget.type] : ['✋', 'Action'];
   const sig = a[0] + a[1];
   if (sig !== lastAct) { lastAct = sig; $('act-i').textContent = a[0]; $('act-l').textContent = a[1]; act.classList.toggle('pulse', !!curTarget || !!buildMode); }
-  updateGhost(); updateCamera(dt);
+  updateGhost(); updateCamera(dt); updateGuide(dt);
   const mp = buildMode ? null : targetPos(curTarget);
   if (mp) { const s = screenPos(mp); marker.style.display = s.ok ? 'block' : 'none'; marker.style.left = s.x + 'px'; marker.style.top = s.y + 'px'; } else marker.style.display = 'none';
   updateOverlay(dt); updateToast(dt);
   const hurtEl = $('hurt'), ho = parseFloat(hurtEl.style.opacity || 0); if (ho > 0) hurtEl.style.opacity = String(Math.max(0, ho - dt * 2.5));
   hudT -= dt; if (hudT <= 0) { hudT = .2; hud(); renderQuests(); if (!$('bmenu').classList.contains('hidden')) renderBuildMenu(); if (!guest && !netMate.on && LY.mode) $('ly-s').textContent = 'IA · ' + LY.mode; }
   saveT -= dt; if (saveT <= 0) { saveT = 5; save(); }
-  netT -= dt; if (netT <= 0 && NET.conn) { netT = .1; if (NET_ROLE === 'host') sendSnap(); else if (guest) { const u = player.userData; netSend({ t: 'me', p: [player.position.x, player.position.z, player.rotation.y, Math.max(0, ANIMS.indexOf(u.anim)), u.swing > .25 ? 1 : 0, u.shoot > .25 ? 1 : 0], hp: ME.hp }); } }
+  netT -= dt; if (netT <= 0 && NET.conn) { netT = .1; if (NET_ROLE === 'host') sendSnap(); else if (guest) { const u = player.userData; netSend({ t: 'me', p: [player.position.x, player.position.z, player.rotation.y, Math.max(0, ANIMS.indexOf(u.anim)), u.swing > .25 ? 1 : 0, u.shoot > .25 ? 1 : 0], hp: ME.hp, g: ME.gear }); } }
 }
 loop();
 addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-window.__onPlay = () => { audioInit(); toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); };
+window.__onPlay = () => { audioInit(); setTimeout(checkDaily, 1400); toast('🏝️', 'Bienvenue sur Everisle !', 'Récolte, construis et fais grandir ton village. Menu 💬 Duo pour jouer à deux.'); };
 setTimeout(() => { const l = $('loading'); if (l) { l.style.opacity = 0; setTimeout(() => l.remove(), 700); } }, 300);
 window._ready = true;
-window.__game = { ROADS, createSite, camera, isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };
+window.__game = { ROADS, ME, craft, banner, burst, checkDaily, performAction, createSite, camera, isFree, addXP, openBuilding, step: sec => { for (let i = 0; i < sec * 20; i++) { simT += .05; tick(.05, simT); } }, S, ME, get player() { return player; }, kaelC, lyra, MONSTERS, SITES, TREES, ROCKS, BERRIES, DEER, RESIDENTS, BOUNDS, REGIONS, NET, netMate, startPlacement, placeBuild, doAction, findTarget, setJob, startUpgrade, doBuild, hostGame, joinGame, doTrade, keys, joyV, setTime: h => { S.time = h; }, role: () => NET_ROLE };
 
 initNative();

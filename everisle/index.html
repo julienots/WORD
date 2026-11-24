@@ -178,6 +178,24 @@ html,body{touch-action:none;overscroll-behavior:none}
 .upbox{margin-top:1.2vh;padding:1vh;border-radius:1.2vh;background:rgba(0,0,0,.25)}
 .upbox .miss,.cost .miss{color:#ff8a7a}
 .modal,.bmenu{z-index:5}
+.flyres{position:absolute;font-size:2.8vh;pointer-events:none;z-index:4;filter:drop-shadow(0 .2vh .3vh rgba(0,0,0,.7))}
+.pill.bump{animation:bump .35s ease}
+@keyframes bump{40%{transform:scale(1.2);box-shadow:0 0 2vh rgba(255,207,90,.8)}}
+#banner{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;z-index:7}
+#banner.show{animation:bannerIn 3.2s ease forwards}
+#banner .bi{font-size:7vh;filter:drop-shadow(0 .6vh 1vh rgba(0,0,0,.6))}
+#banner .bt{font-weight:700;font-size:6vh;line-height:1.05;background:linear-gradient(180deg,#fff7d8,#ffd35a 55%,#f29a2e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .4vh 0 #7a3a12) drop-shadow(0 .8vh 1.2vh rgba(0,0,0,.6));white-space:nowrap}
+#banner .bs{color:#fff3d8;font-size:2.2vh;margin-top:.8vh;text-shadow:0 .2vh .5vh #000}
+@keyframes bannerIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}20%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+#guide{position:absolute;left:0;top:0;display:none;pointer-events:none;z-index:3}
+#guide.pin span{display:block;font-size:3.2vh;animation:bob .8s ease-in-out infinite;filter:drop-shadow(0 0 1vh rgba(255,220,120,.9))}
+#guide.edge{width:7vh;height:7vh;border-radius:50%;background:rgba(32,24,16,.7);border:.25vh solid var(--gold);display:none}
+#guide.edge span{position:absolute;inset:0;display:grid;place-items:center;font-size:3vh}
+#guide.edge i{position:absolute;inset:-1.6vh;display:grid;place-items:center;justify-items:end;font-style:normal;color:var(--gold);font-size:2.6vh;text-shadow:0 0 .8vh #000}
+.chest{font-size:10vh;text-align:center;animation:bob 1s ease-in-out infinite}
+.slot[data-tier="1"]{box-shadow:inset 0 0 0 .3vh #e4e8ee}
+.slot[data-tier="2"]{box-shadow:inset 0 0 0 .3vh #7ff0ff,0 0 1.2vh rgba(127,240,255,.6)}
+.craft{font-size:1.4vh;line-height:1.2}
 .setbtn{position:absolute;right:2.6vh;top:24.5vh;width:5vh;height:5vh;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;background:rgba(32,24,16,.6);border:.18vh solid var(--edge)}
 .gbtn.off{filter:grayscale(.8);opacity:.6}
 .bubble.chat{font-size:2vh}
@@ -335,6 +353,8 @@ body.intro-on #hud{opacity:0}
   <div class="modal panel hidden tap" id="modal"><div class="mhead"><b id="mtitle"></b><span class="x tap" id="mclose">✕</span></div><div id="mbody"></div></div>
 
   <div id="tags"></div>
+  <div id="guide"></div>
+  <div id="banner"></div>
   <div class="marker" id="marker">▼</div>
 </div>
 
